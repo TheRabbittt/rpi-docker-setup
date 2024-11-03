@@ -147,7 +147,7 @@ services:
       - "4443:443/tcp"
     environment:
       TZ: 'Europe/Stockholm' #change this
-      WEBPASSWORD: 'password'
+      WEBPASSWORD: 'password' #change this
     volumes:
        - './data/etc:/etc/pihole/'
        - './data/dnsmasq.d/:/etc/dnsmasq.d/'
@@ -251,7 +251,7 @@ services:
       - INTERNAL_SUBNET=10.13.13.0 #optional
       - ALLOWEDIPS=0.0.0.0/0 #optional
     volumes:
-      - /home/pi/wireguard/config:/config                      # Change this
+      - /home/pi/wireguard/config:/config                      
       - /lib/modules:/lib/modules
     ports:
       - 51820:51820/udp                                        # Forward port 51820/udp on your router to the server IP
