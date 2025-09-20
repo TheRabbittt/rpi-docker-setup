@@ -1,6 +1,6 @@
 # <img src="https://github.com/user-attachments/assets/39d7950d-8c68-4845-a20c-97ba42d940cd" width="60" alt="logo"> Raspberry-Pi Setup
 
-This repository documents my Raspberry Pi server setup, covering configuration steps, Docker Compose files, and other useful resources. 
+This repository documents my raspberry pi server setup, covering configuration steps, docker compose files, and other useful resources. 
 
 #### Here's a list of services with links to their repositories:
 * [Nginx Proxy Manager](https://github.com/Nginxproxymanager/Nginx-Proxy-Manager)
@@ -11,10 +11,12 @@ This repository documents my Raspberry Pi server setup, covering configuration s
 * [WireGuard](https://www.wireguard.com/)
 * [Watchtower](https://github.com/Containrrr/Watchtower)
 * [Filebrowser](https://github.com/hurlenko/filebrowser-docker)
+* [Obsidian-LiveSync](https://github.com/vrtmrz/obsidian-livesync)
+* [Grafana/Pi Monitoring](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file)
 ---
 
 ## Prerequisites
-* Adequate storage for your needs. (Example: a 128GB microSD card with 8GB used for the services below.)
+* Adequate storage for your needs. (Example: I used a 128GB microSD card with 20% used for all my services.)
 * A Raspberry Pi with an installed and updated OS. (I used [Raspberry Pi OS](https://www.raspberrypi.com/software/) 64-bit, based on Debian, but any OS should work as long as you know the commands for it.)
 * Static IP: Recommended for consistent access.
 
@@ -53,9 +55,9 @@ docker compose version
 
 ## NGINX Proxy Manager
 
-NGINX Proxy Manager lets you manage domains and control which application each domain points to. For example, you can create a domain name for Pi-hole (e.g., pihole.website.io) instead of using its IP address. This setup won’t be public; only devices connected to NGINX Proxy Manager will access these domains.
+NGINX Proxy Manager lets you manage domains and control which application each domain points to. For example, you can create a domain name for Pi-hole (e.g., pihole.website.io) instead of using its IP address. This setup won’t be public; only devices within your LAN will be able to access these services.
 
-    Tutorial: [Video Guide](https://www.youtube.com/watch?v=qlcVx-k-02E) (I used deSEC for DNS, which is free.)
+    Tutorial: Credit to "Wolfgang's Channel" on youtube for this video guide (https://www.youtube.com/watch?v=qlcVx-k-02E) (I used deSEC for DNS, which is free.)
 
 ``` Bash
 services:
@@ -73,7 +75,7 @@ services:
     restart: always
     networks:
       proxy:
-        ipv4_address: 172.19.0.10
+        ipv4_address: 172.19.0.2
 
 networks:
   name: proxy
@@ -88,12 +90,12 @@ Run NGINX Proxy Manager with the following Docker Compose configuration:
 ``` Bash
 docker compose up -d
 ```
-Access NGINX Proxy Manager at {raspberrypiIP}:81.
+Access NGINX Proxy Manager at {raspberrypi-ip}:81.
 
 ## Portainer
 Portainer is a GUI tool for managing Docker containers.
 
-To organize, I create a directory for each service/application and place the corresponding Docker Compose file in that directory.
+To organize my docker compose files, I create a directory for each service/application and place the corresponding docker compose file in that directory.
 
 ##### Portainer Compose File
 ``` Bash
@@ -129,7 +131,7 @@ Run Portainer with:
 ``` Bash
 docker compose up -d
 ```
-Access Portainer at https://{raspberrypiIP}:9443.
+Access Portainer at https://{raspberrypi-ip}:9443.
 
 ## Pi-Hole + Cloudflared
 
@@ -155,8 +157,8 @@ services:
     networks:
       pihole:
         ipv4_address: 172.30.0.2
-      nginx-proxy-manager_proxy:
-        ipv4_address: 172.19.0.16
+      proxy:
+        ipv4_address: 172.19.0.12
     dns:
       - 127.0.0.1 #set dns within container to 127.0.0.1
 
@@ -184,18 +186,18 @@ networks:
     ipam:
       config:
         - subnet: 172.30.0.0/16
-  nginx-proxy-manager_proxy:
+  proxy:
     external: true
 
 ```
-After running the docker compose yml you should be able to reach pihole through http://{raspberrypi_ip}:8061/admin. Login password should be "changeme" although you should change the password which you can do by going into the docker container.
+After running the docker compose yml you should be able to reach pihole through ```http://{raspberrypi_ip}:8061/admin```. Login password should be "changeme" although you should change the password which you can do by going into the docker container.
 
 ``` Bash
 docker exec -it <container_id> bash
 pihole -a -p <password>
 ```
 
-For the finale configuration, go into settings in pihole and change the upstream DNS to the docker container IP addresses of cloudflared. Now that should be it for the raspberry pi, change your DNS server (typically your router) to point to the raspberry pi and boom.... you are done.
+For the finale configuration, go into settings in pihole and change the upstream DNS to the docker container IP addresses of cloudflared (172.30.1.1 & 172.30.8.8). Now that should be it for the raspberry pi, change your DNS server (typically your router) to point to the raspberry pi and boom.... you are done.
 
 ## Bitwarden/Vaultwarden
 Bitwarden is a password manager and vaultwarden is a more lightweight option that you can host yourself. This works with the bitwarden app and extension. 
@@ -228,7 +230,7 @@ networks:
      external: true                               
 ```
 
-Once the container is up you should be able to reach bitwarden through http://{raspberrypiIP}:8080, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest. 
+Once the container is up you should be able to reach bitwarden through http://{raspberrypi-ip}:8080, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest. 
 
 ## Wireguard VPN
 I also have a VPN on my Pi to be able to reach my DNS and my LAN in general from outside my network. There are different options out there but I choose wireguard and found it simple to configure.
@@ -263,7 +265,7 @@ services:
       wireguard:
         ipv4_address: 172.22.0.2
       proxy:
-        ipv4_address: 172.19.0.15
+        ipv4_address: 172.19.0.14
 
 networks:
   name: wireguard
@@ -343,6 +345,30 @@ networks:
      external: true
 
 ```
+
+## Obsidian-LiveSync
+
+Obsidian is a note-taking app that uses plain-text Markdown files stored locally. Obsidian LiveSync is a self-hosted synchronization plugin you can run on a Raspberry Pi, enabling real-time, end-to-end encrypted syncing of your notes across multiple devices without relying on third-party cloud services.
+
+```Bash
+services:
+   obsidian-livesync:
+    container_name: obsidian-livesync
+    image: couchdb:latest
+    environment:
+      - TZ=Europe/Stockholm                # Change this
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password          # Change this
+    volumes:
+      - ./data:/opt/couchdb/data
+      - ./etc:/opt/couchdb/etc/local.d
+    ports:
+      - "5984:5984"
+    restart: unless-stopped
+```
+
+Next you will have to setup the database, I would recommend following this [Guide](https://www.reddit.com/r/selfhosted/comments/1eo7knj/guide_obsidian_with_free_selfhosted_instant_sync/)
+
 ## Receive Discord Alerts for Raspberry Pi Overheating
 
 First create a new server in Discord where you will get your alerts. Find the webhook link for that server and keep the link somewhere for now.
