@@ -13,6 +13,7 @@ This repository documents my raspberry pi server setup, covering configuration s
 * [Filebrowser](https://github.com/hurlenko/filebrowser-docker)
 * [Obsidian-LiveSync](https://github.com/vrtmrz/obsidian-livesync)
 * [Grafana/Pi Monitoring](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file)
+* [arr stack + inc sonarr, radarr, prowlarr, flaresolverr, overseerr, qbittorrent]()
 ---
 
 ## Prerequisites
@@ -75,14 +76,14 @@ services:
     restart: always
     networks:
       proxy:
-        ipv4_address: 172.19.0.2
+        ipv4_address: 172.20.0.2
 
 networks:
-  name: proxy
   proxy:
+    name: proxy
     ipam:
       config:
-        - subnet: 172.19.0.0/16
+        - subnet: 172.20.0.0/16
 ```
 
 
@@ -100,7 +101,7 @@ To organize my docker compose files, I create a directory for each service/appli
 ##### Portainer Compose File
 ``` Bash
 services:
-  portainer:
+   portainer:
     container_name: portainer
     image: portainer/portainer-ce:latest
     ports:
@@ -108,24 +109,24 @@ services:
     volumes:
       - data:/data
       - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
     networks:
       portainer:
-        ipv4_address: 172.18.0.2
+        ipv4_address: 172.30.0.2
       proxy:
-        ipv4_address: 172.19.0.11
+        ipv4_address: 172.20.0.3
+    restart: unless-stopped
+  
 volumes:
   data:
-
+  
 networks:
-  name: portainer
   portainer:
+    name: portainer
     ipam:
       config:
-        - subnet: 172.18.0.0/16
+        - subnet: 172.30.0.0/16
   proxy:
-    external: true
-
+     external: true
 ```
 Run Portainer with:
 ``` Bash
@@ -148,19 +149,16 @@ services:
       - "8061:80/tcp"
       - "4443:443/tcp"
     environment:
-      TZ: 'Europe/Stockholm' #change this
-      WEBPASSWORD: 'password' #change this
+      TZ: 'Europe/Stockholm'                  #change this
+      WEBPASSWORD: password                   #change this
     volumes:
        - './data/etc:/etc/pihole/'
-       - './data/dnsmasq.d/:/etc/dnsmasq.d/'
     restart: unless-stopped
     networks:
       pihole:
-        ipv4_address: 172.30.0.2
+        ipv4_address: 172.50.0.2
       proxy:
-        ipv4_address: 172.19.0.12
-    dns:
-      - 127.0.0.1 #set dns within container to 127.0.0.1
+        ipv4_address: 172.20.0.4
 
   cloudflared-cf:
     container_name: cloudflared-cf
@@ -169,7 +167,7 @@ services:
     restart: unless-stopped
     networks:
       pihole:
-        ipv4_address: 172.30.1.1
+        ipv4_address: 172.50.1.1
 
   cloudflared-goog:
     container_name: cloudflared-goog
@@ -178,17 +176,16 @@ services:
     restart: unless-stopped
     networks:
       pihole:
-        ipv4_address: 172.30.8.8
+        ipv4_address: 172.50.8.8
 
 networks:
   pihole:
     name: pihole
     ipam:
       config:
-        - subnet: 172.30.0.0/16
+        - subnet: 172.50.0.0/16
   proxy:
     external: true
-
 ```
 After running the docker compose yml you should be able to reach pihole through ```http://{raspberrypi_ip}:8061/admin```. Login password should be "changeme" although you should change the password which you can do by going into the docker container.
 
@@ -209,25 +206,25 @@ services:
     container_name: vaultwarden
     restart: unless-stopped
     environment:
-      - WEBSOCKET_ENABLED=true               
+      - WEBSOCKET_ENABLED=true
     volumes:
       - ./data:/data
     ports:
-      - 8080:80  
+      - 8080:80
     networks:
       bitwarden:
-        ipv4_address: 172.21.0.2
+        ipv4_address: 172.70.0.2
       proxy:
-        ipv4_address: 172.19.0.13
+        ipv4_address: 172.20.0.5
 
 networks:
-  name:bitwarden
   bitwarden:
+    name: bitwarden
     ipam:
       config:
-        - subnet: 172.21.0.0/16
+        - subnet: 172.70.0.0/16
   proxy:
-     external: true                               
+    external: true                             
 ```
 
 Once the container is up you should be able to reach bitwarden through http://{raspberrypi-ip}:8080, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest. 
@@ -248,12 +245,12 @@ services:
       - TZ=Europe/Stockholm                                    # Change this
       - SERVERURL=auto #optional                               # Set to automatically find server's external IP   
       - SERVERPORT=51820 #optional
-      - PEERS=1 #optional                                      # Change this to the number of clients needed
-      - PEERDNS=172.19.0.16 #optional                          # Pi-Hole docker IP Address (most likely a 172.... address)
+      - PEERS=3 #optional                                      # Change this to the number of clients needed
+      - PEERDNS=172.20.0.4  #optional                          # Pi-Hole docker IP Address (most likely a 172.... address)
       - INTERNAL_SUBNET=10.13.13.0 #optional
       - ALLOWEDIPS=0.0.0.0/0 #optional
     volumes:
-      - /home/pi/wireguard/config:/config                      
+      - /home/pi/wireguard/config:/config
       - /lib/modules:/lib/modules
     ports:
       - 51820:51820/udp                                        # Forward port 51820/udp on your router to the server IP
@@ -263,16 +260,16 @@ services:
     restart: unless-stopped
     networks:
       wireguard:
-        ipv4_address: 172.22.0.2
+        ipv4_address: 172.40.0.2
       proxy:
-        ipv4_address: 172.19.0.14
+        ipv4_address: 172.20.0.7
 
 networks:
-  name: wireguard
   wireguard:
+    name: wireguard
     ipam:
       config:
-        - subnet: 172.22.0.0/16
+        - subnet: 172.40.0.0/16
   proxy:
      external: true
 ```
@@ -293,24 +290,24 @@ services:
     image: containrrr/watchtower:latest
     container_name: watchtower
     environment:
-      TZ: Europe/Stockholm                                                                               
+      TZ: Europe/Stockholm
       WATCHTOWER_ROLLING_RESTART: 'true'
       #WATCHTOWER_MONITOR_ONLY: 'true'
-      WATCHTOWER_SCHEDULE: '0 0 0 * * 0' #Runs Once A Week (Cron Epression)
+      WATCHTOWER_SCHEDULE: '0 0 0 * * 0'          #Runs Once A Week (Cron Epression)
       WATCHTOWER_CLEANUP: 'true'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
     networks:
       watchtower:
-        ipv4_address: 172.23.0.2
+        ipv4_address: 172.120.0.2
 
 networks:
-  name: watchtower
   watchtower:
+    name: watchtower
     ipam:
       config:
-        - subnet: 172.23.0.0/16
+        - subnet: 172.120.0.0/16
 ```
 
 ## Filebrowser
@@ -318,8 +315,8 @@ Filebrowser is a simple file management tool.
 ```Bash
 services:
   filebrowser:
-    image: hurlenko/filebrowser
     container_name: filebrowser
+    image: hurlenko/filebrowser
     user: "${UID}:${GID}"
     ports:
       - 444:8080
@@ -330,20 +327,19 @@ services:
       - FB_BASEURL=/filebrowser
     networks:
       filebrowser:
-        ipv4_address: 172.25.0.2
+        ipv4_address: 172.110.0.2
       proxy:
-        ipv4_address: 172.19.0.15
+        ipv4_address: 172.20.0.6
     restart: unless-stopped
 
 networks:
-  name: filebrowser
   filebrowser:
+    name: filebrowser
     ipam:
       config:
-        - subnet: 172.25.0.0/16
+        - subnet: 172.110.0.0/16
   proxy:
      external: true
-
 ```
 
 ## Obsidian-LiveSync
@@ -352,19 +348,29 @@ Obsidian is a note-taking app that uses plain-text Markdown files stored locally
 
 ```Bash
 services:
-   obsidian-livesync:
+   couchdb-obsidian-livesync:
     container_name: obsidian-livesync
     image: couchdb:latest
     environment:
-      - TZ=Europe/Stockholm                # Change this
+      - TZ=Europe/Stockholm
       - COUCHDB_USER=admin
-      - COUCHDB_PASSWORD=password          # Change this
+      - COUCHDB_PASSWORD=password   #change this
     volumes:
       - ./data:/opt/couchdb/data
       - ./etc:/opt/couchdb/etc/local.d
     ports:
       - "5984:5984"
+    networks:
+      obsidian:
+        ipv4_address: 172.60.0.2
     restart: unless-stopped
+  
+networks:
+  obsidian:
+    name: obsidian
+    ipam:
+      config:
+        - subnet: 172.60.0.0/16
 ```
 
 Next you will have to setup the database, I would recommend following this [Guide](https://www.reddit.com/r/selfhosted/comments/1eo7knj/guide_obsidian_with_free_selfhosted_instant_sync/)
@@ -394,7 +400,7 @@ this_pi=$(hostname)
 
 discord_pi_webhook="Discord Webhook Link"
 
-if [[ "$pi_temp" -ge 45 ]]; then
+if [[ "$pi_temp" -ge 50 ]]; then
   curl -H "Content-Type: application/json" -X POST -d '{"content":"'"ALERT! ${this_pi} CPU temp is: ${pi_temp}"'"}' $discord_pi_webhook
 fi
 ```
@@ -433,6 +439,7 @@ WantedBy=timers.target
 ```
 
 
+## *arr
 
 ``` Bash
 services:
@@ -452,7 +459,7 @@ services:
     restart: unless-stopped
     networks:
       arr:
-        ipv4_address: 172.32.0.2
+        ipv4_address: 172.100.0.2
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
@@ -463,14 +470,14 @@ services:
       - TZ=Europe/Stockholm
     volumes:
       - sonarr_config:/config
-      - /mnt/nas/Tv Shows:/tv
+      - /mnt/nas/Temporary TV Shows & Anime:/tv
       - /home/admin/Downloads/completed:/downloads
     ports:
       - 8989:8989
     restart: unless-stopped
     networks:
       arr:
-        ipv4_address: 172.32.0.3
+        ipv4_address: 172.100.0.3
     
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -486,14 +493,8 @@ services:
       - /home/admin/Downloads/completed:/downloads
       - /home/admin/Downloads/incomplete:/incomplete
       - /home/admin/Downloads/torrents:/torrents
-    ports:
-      - 8081:8081
-      - 6881:6881
-      - 6881:6881/udp
     restart: unless-stopped
-    networks:
-      arr:
-        ipv4_address: 172.32.0.7
+    network_mode: "container:gluetun"
     
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
@@ -509,7 +510,7 @@ services:
     restart: unless-stopped
     networks:
       arr:
-        ipv4_address: 172.32.0.4
+        ipv4_address: 172.100.0.4
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
@@ -525,7 +526,7 @@ services:
     restart: unless-stopped
     networks:
       arr:
-        ipv4_address: 172.32.0.5
+        ipv4_address: 172.100.0.5
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -542,14 +543,15 @@ services:
     restart: unless-stopped
     networks:
       arr:
-        ipv4_address: 172.32.0.6
+        ipv4_address: 172.100.0.6
 
 networks:
   arr:
     driver: bridge
+    name: arr
     ipam:
       config:
-        - subnet: 172.32.0.0/16
+        - subnet: 172.100.0.0/16
 
 volumes:
   radarr_config:
@@ -559,3 +561,179 @@ volumes:
   flaresolverr_config:
   qbittorrent_config:
 ```
+
+## Grafana
+
+``` Bash
+services:
+  grafana:
+    container_name: monitoring-grafana
+    image: grafana/grafana:latest
+    hostname: rpi-grafana
+    restart: unless-stopped
+    user: "472"
+    networks:
+      - monitor
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./grafana/.env
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.example.description=Grafana Dashboard"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  cadvisor:
+    container_name: monitoring-cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    hostname: rpi-cadvisor
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    networks:
+      - monitor
+    expose:
+      - 8080
+    command:
+      - '-housekeeping_interval=15s'
+      - '-docker_only=true'
+      - '-store_container_labels=false'
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.example.description=cAdvisor Container Monitoring"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 256m
+    mem_reservation: 128m
+
+  node-exporter:
+    container_name: monitoring-node-exporter
+    image: prom/node-exporter:latest
+    hostname: rpi-exporter
+    restart: unless-stopped
+    networks:
+      - monitor
+    expose:
+      - 9100
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/host
+      - --collector.filesystem.ignored-mount-points
+      - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /:/host:ro,rslave
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.example.description=Node Exporter"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 128m
+    mem_reservation: 64m
+
+  prometheus:
+    container_name: monitoring-prometheus
+    image: prom/prometheus:latest
+    hostname: rpi-prometheus
+    restart: unless-stopped
+    user: "nobody"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1y'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - monitor
+    expose:
+      - 9090
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus:/etc/prometheus/
+    depends_on:
+      - cadvisor
+      - node-exporter
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.example.description=Prometheus Time Series Database"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 1g
+    mem_reservation: 512m
+
+volumes:
+  grafana-data:
+    labels:
+      - "com.example.description=Grafana Persistent Data"
+      - "com.example.service=monitoring"
+  prometheus-data:
+    labels:
+      - "com.example.description=Prometheus Persistent Data"
+      - "com.example.service=monitoring"
+
+networks:
+  monitor:
+    driver: bridge
+    name: grafana
+    ipam:
+      config:
+        - subnet: 172.80.0.0/16
+          gateway: 172.80.0.1
+    labels:
+      - "com.example.description=Monitoring Network"
+      - "com.example.service=monitoring"
+```
+
