@@ -452,8 +452,7 @@ services:
       - TZ=Europe/Stockholm
     volumes:
       - radarr_config:/config
-      - /mnt/nas/Temporary Movies:/movies
-      - /home/admin/Downloads/completed:/downloads
+      - /mnt/BigBoi/data:/data
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -470,8 +469,7 @@ services:
       - TZ=Europe/Stockholm
     volumes:
       - sonarr_config:/config
-      - /mnt/nas/Temporary TV Shows & Anime:/tv
-      - /home/admin/Downloads/completed:/downloads
+      - /mnt/BigBoi/data:/data
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -490,9 +488,7 @@ services:
       - TORRENTING_PORT=6881
     volumes:
       - qbittorrent_config:/config
-      - /home/admin/Downloads/completed:/downloads
-      - /home/admin/Downloads/incomplete:/incomplete
-      - /home/admin/Downloads/torrents:/torrents
+      - /mnt/BigBoi/data/Downloads:/data/Downloads
     restart: unless-stopped
     network_mode: "container:gluetun"
     
