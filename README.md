@@ -502,8 +502,9 @@ volumes:
   qbittorrent_config:
 ```
 
-
 ## Grafana
+
+To setup grafana I followed oijkn's guide on github  [Oijkn](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file)
 
 ``` Bash
 services:
