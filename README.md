@@ -13,7 +13,13 @@ This repository documents my raspberry pi server setup, covering configuration s
 * [Filebrowser](https://github.com/hurlenko/filebrowser-docker)
 * [Obsidian-LiveSync](https://github.com/vrtmrz/obsidian-livesync)
 * [Grafana/Pi Monitoring](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file)
-* [arr stack + inc sonarr, radarr, prowlarr, flaresolverr, overseerr, qbittorrent]()
+* [*arr Stack]()
+  * [Overseerr](https://github.com/sct/overseerr)
+  * [Radarr](https://github.com/Radarr/Radarr)
+  * [Sonarr](https://github.com/Sonarr/Sonarr)
+  * [Prowlarr](https://github.com/Prowlarr/Prowlarr)
+  * [Flaresolverr](https://github.com/FlareSolverr/FlareSolverr)
+  * [qBittorrent](https://github.com/linuxserver/docker-qbittorrent)
 ---
 
 ## Prerequisites
@@ -28,7 +34,7 @@ To get started, install ```docker``` and ```docker-compose```.
 
 Docker is a tool that simplifies application deployment in lightweight containers. Containers share the same OS resources, so they’re more efficient than virtual machines.
 
-Docker Compose is a tool that simplifies the setup of multiple Docker containers through YAML configuration files.
+Docker compose is a tool that simplifies the setup of multiple docker containers through YAML configuration files.
 
     Note: Installation varies by OS. Refer to [Docker's Official Site](https://docs.docker.com/desktop/install/debian/) for detailed instructions on your specific OS.
 #### Docker on Debian 
@@ -375,71 +381,9 @@ networks:
 
 Next you will have to setup the database, I would recommend following this [Guide](https://www.reddit.com/r/selfhosted/comments/1eo7knj/guide_obsidian_with_free_selfhosted_instant_sync/)
 
-## Receive Discord Alerts for Raspberry Pi Overheating
-
-First create a new server in Discord where you will get your alerts. Find the webhook link for that server and keep the link somewhere for now.
-
-On the raspberry pi create a file, you can call it anything, I named it cpu_temp.sh. Paste what's below into it and place the discord webhook link at the correct variable in the script:
-
-NOTE: Credit to Dave McKay for the script and tutorial on how to do it [LINK](https://www.howtogeek.com/discord-slack-alert-raspberry-pi-too-hot/)
-
-``` Bash
-#!/bin/bash
-
-# get CPU temperature in Celsius
-pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2)}')
-
-# for Fahrenheit temperatures, use this line instead
-# pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2 * 1.8)+32}')
-
-# round down to an integer value
-pi_temp=$(echo $pi_temp | awk -F "[.]" '{print($1)}')
-
-# get the hostname, so we know which Pi is sending the alert
-this_pi=$(hostname)
-
-discord_pi_webhook="Discord Webhook Link"
-
-if [[ "$pi_temp" -ge 50 ]]; then
-  curl -H "Content-Type: application/json" -X POST -d '{"content":"'"ALERT! ${this_pi} CPU temp is: ${pi_temp}"'"}' $discord_pi_webhook
-fi
-```
-
-To test it and make sure it's working change the 45 in the if statement to something lower like 20. Run the file ./cpu_temp.sh and you should get a notification in Discord. 
-
-Now to automate this I used systemd timers and used this as a reference on what to do [LINK](https://www.howtogeek.com/replace-cron-jobs-with-systemd-timers/).
-
-Create a pialert.service and pialert.timer file at /etc/systemd/system
-
-pialert.service
-
-``` Bash
-Description="Runs pi alert script"
-Requires=cpu_temp.sh
-
-[Service]
-Type=simple
-ExecStart=/home/admin/pi-alert/cpu_temp.sh
-User=admin #change this to your user
-```
-
-pialert.timer
-
-``` Bash
-[Unit]
-Description="Timer for the pialert.service"
-
-[Timer]
-Unit=pialert.service
-OnBootSec=5min
-OnUnitActiveSec=10min #how often it should run
-
-[Install]
-WantedBy=timers.target
-```
-
-
 ## *arr
+
+For my arr stack I run everything within the same docker compose configuration file. Seems logical since they are mostly dependent on eachother. The initial setup of all of these is pretty simple but if you have trouble or things you would like to optimize I would recommend using this guide [Trash Guide](https://trash-guides.info/).
 
 ``` Bash
 services:
@@ -557,6 +501,7 @@ volumes:
   flaresolverr_config:
   qbittorrent_config:
 ```
+
 
 ## Grafana
 
@@ -731,5 +676,68 @@ networks:
     labels:
       - "com.example.description=Monitoring Network"
       - "com.example.service=monitoring"
+```
+
+## Receive Discord Alerts for Raspberry Pi Overheating
+
+First create a new server in Discord where you will get your alerts. Find the webhook link for that server and keep the link somewhere for now.
+
+On the raspberry pi create a file, you can call it anything, I named it cpu_temp.sh. Paste what's below into it and place the discord webhook link at the correct variable in the script:
+
+NOTE: Credit to Dave McKay for the script and tutorial on how to do it [LINK](https://www.howtogeek.com/discord-slack-alert-raspberry-pi-too-hot/)
+
+``` Bash
+#!/bin/bash
+
+# get CPU temperature in Celsius
+pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2)}')
+
+# for Fahrenheit temperatures, use this line instead
+# pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2 * 1.8)+32}')
+
+# round down to an integer value
+pi_temp=$(echo $pi_temp | awk -F "[.]" '{print($1)}')
+
+# get the hostname, so we know which Pi is sending the alert
+this_pi=$(hostname)
+
+discord_pi_webhook="Discord Webhook Link"
+
+if [[ "$pi_temp" -ge 50 ]]; then
+  curl -H "Content-Type: application/json" -X POST -d '{"content":"'"ALERT! ${this_pi} CPU temp is: ${pi_temp}"'"}' $discord_pi_webhook
+fi
+```
+
+To test it and make sure it's working change the 45 in the if statement to something lower like 20. Run the file ./cpu_temp.sh and you should get a notification in Discord. 
+
+Now to automate this I used systemd timers and used this as a reference on what to do [LINK](https://www.howtogeek.com/replace-cron-jobs-with-systemd-timers/).
+
+Create a pialert.service and pialert.timer file at /etc/systemd/system
+
+pialert.service
+
+``` Bash
+Description="Runs pi alert script"
+Requires=cpu_temp.sh
+
+[Service]
+Type=simple
+ExecStart=/home/admin/pi-alert/cpu_temp.sh
+User=admin #change this to your user
+```
+
+pialert.timer
+
+``` Bash
+[Unit]
+Description="Timer for the pialert.service"
+
+[Timer]
+Unit=pialert.service
+OnBootSec=5min
+OnUnitActiveSec=10min #how often it should run
+
+[Install]
+WantedBy=timers.target
 ```
 
