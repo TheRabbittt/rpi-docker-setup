@@ -385,6 +385,8 @@ Next you will have to setup the database, I would recommend following this [Guid
 
 For my arr stack I run everything within the same docker compose configuration file. Seems logical since they are mostly dependent on eachother. The initial setup of all of these is pretty simple but if you have trouble or things you would like to optimize I would recommend using this guide [Trash Guide](https://trash-guides.info/).
 
+My docker compose stack is a little unique. I have mounted my NAS drive to my raspberry pi. You will have to change volumes specifically /mnt/BigBoi/x:/data part.
+
 ``` Bash
 services:
   radarr:
