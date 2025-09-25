@@ -36,7 +36,8 @@ Docker is a tool that simplifies application deployment in lightweight container
 
 Docker compose is a tool that simplifies the setup of multiple docker containers through YAML configuration files.
 
-    Note: Installation varies by OS. Refer to [Docker's Official Site](https://docs.docker.com/desktop/install/debian/) for detailed instructions on your specific OS.
+   Note: Installation varies by OS. Refer to [Docker's Official Site](https://docs.docker.com/desktop/install/debian/) for detailed instructions on your specific OS.
+   
 #### Docker on Debian 
 ``` Bash
 curl -sSl https://get.docker.com | sh
@@ -64,7 +65,7 @@ docker compose version
 
 NGINX Proxy Manager lets you manage domains and control which application each domain points to. For example, you can create a domain name for Pi-hole (e.g., pihole.website.io) instead of using its IP address. This setup won’t be public; only devices within your LAN will be able to access these services.
 
-    Tutorial: Credit to "Wolfgang's Channel" on youtube for this video guide (https://www.youtube.com/watch?v=qlcVx-k-02E) (I used deSEC for DNS, which is free.)
+   Tutorial: Credit to "Wolfgang's Channel" on youtube for this [video](https://www.youtube.com/watch?v=qlcVx-k-02E) guide (I used deSEC for DNS, which is free.)
 
 ``` Bash
 services:
@@ -97,7 +98,7 @@ Run NGINX Proxy Manager with the following Docker Compose configuration:
 ``` Bash
 docker compose up -d
 ```
-Access NGINX Proxy Manager at {raspberrypi-ip}:81.
+Access NGINX Proxy Manager at ```http://{raspberrypi-ip}:81```.
 
 ## Portainer
 Portainer is a GUI tool for managing Docker containers.
@@ -138,7 +139,7 @@ Run Portainer with:
 ``` Bash
 docker compose up -d
 ```
-Access Portainer at https://{raspberrypi-ip}:9443.
+Access Portainer at ```https://{raspberrypi-ip}:9443```.
 
 ## Pi-Hole + Cloudflared
 
@@ -233,7 +234,7 @@ networks:
     external: true                             
 ```
 
-Once the container is up you should be able to reach bitwarden through http://{raspberrypi-ip}:8080, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest. 
+Once the container is up you should be able to reach bitwarden through ```http://{raspberrypi-ip}:8080```, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest. 
 
 ## Wireguard VPN
 I also have a VPN on my Pi to be able to reach my DNS and my LAN in general from outside my network. There are different options out there but I choose wireguard and found it simple to configure.
@@ -358,8 +359,8 @@ services:
     container_name: obsidian-livesync
     image: couchdb:latest
     environment:
-      - TZ=Europe/Stockholm
-      - COUCHDB_USER=admin
+      - TZ=Europe/Stockholm         #change this
+      - COUCHDB_USER=admin          #change this
       - COUCHDB_PASSWORD=password   #change this
     volumes:
       - ./data:/opt/couchdb/data
@@ -395,10 +396,10 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm
+      - TZ=Europe/Stockholm                                 #change this
     volumes:
       - radarr_config:/config
-      - /mnt/BigBoi/data:/data
+      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -412,10 +413,10 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm
+      - TZ=Europe/Stockholm                                 #change this
     volumes:
       - sonarr_config:/config
-      - /mnt/BigBoi/data:/data
+      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -427,14 +428,14 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     environment:
-      - PUID=1026
+      - PUID=1026                  
       - PGID=1000
-      - TZ=Europe/Stockholm
+      - TZ=Europe/Stockholm                                 #change this
       - WEBUI_PORT=8081
       - TORRENTING_PORT=6881
     volumes:
       - qbittorrent_config:/config
-      - /mnt/BigBoi/data/Downloads:/data/Downloads
+      - /mnt/BigBoi/data/Downloads:/data/Downloads          #change this, in this example I have mounted my NAS share to my raspberry pi.
     restart: unless-stopped
     network_mode: "container:gluetun"
     
@@ -444,7 +445,7 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm
+      - TZ=Europe/Stockholm                                #change this
     volumes:
       - overseerr_config:/config
     ports:
@@ -460,7 +461,7 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm
+      - TZ=Europe/Stockholm                                #change this
     volumes:
       - prowlarr_config:/config
     ports:
@@ -477,7 +478,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_HTML=${LOG_HTML:-false}
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-      - TZ=Europe/Stockholm
+      - TZ=Europe/Stockholm                                #change this
     volumes:
       - flaresolverr_config:/config
     ports:
