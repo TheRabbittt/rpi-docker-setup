@@ -20,6 +20,7 @@ This repository documents my raspberry pi server setup, covering configuration s
   * [Prowlarr](https://github.com/Prowlarr/Prowlarr)
   * [Flaresolverr](https://github.com/FlareSolverr/FlareSolverr)
   * [qBittorrent](https://github.com/linuxserver/docker-qbittorrent)
+* [Gluetun](https://github.com/qdm12/gluetun)
 ---
 
 ## Prerequisites
@@ -424,7 +425,7 @@ services:
       arr:
         ipv4_address: 172.100.0.3
     
-  qbittorrent:
+  qbittorrent:                                             #Run through gluetun
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     environment:
@@ -455,7 +456,7 @@ services:
       arr:
         ipv4_address: 172.100.0.4
 
-  prowlarr:
+  prowlarr:                                              #Run through gluetun
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
@@ -464,14 +465,10 @@ services:
       - TZ=Europe/Stockholm                                #change this
     volumes:
       - prowlarr_config:/config
-    ports:
-      - 9696:9696
     restart: unless-stopped
-    networks:
-      arr:
-        ipv4_address: 172.100.0.5
+    network_mode: "container:gluetun"
 
-  flaresolverr:
+  flaresolverr:                                            #Run through gluetun
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     environment:
@@ -481,12 +478,8 @@ services:
       - TZ=Europe/Stockholm                                #change this
     volumes:
       - flaresolverr_config:/config
-    ports:
-      - "${PORT:-8191}:8191"
     restart: unless-stopped
-    networks:
-      arr:
-        ipv4_address: 172.100.0.6
+    network_mode: "container:gluetun"
 
 networks:
   arr:
@@ -503,6 +496,46 @@ volumes:
   prowlarr_config:
   flaresolverr_config:
   qbittorrent_config:
+```
+
+## Glueutun
+
+``` Bash
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./data:/gluetun
+    environment:
+      - TZ=Europe/Stockholm                               #change all below.
+      - VPN_SERVICE_PROVIDER=                             
+      - VPN_TYPE=                                         
+      - OPENVPN_USER=
+      - OPENVPN_PASSWORD=
+      - SERVER_REGIONS=
+    ports:
+      - 8081:8081     #For qbittorrent
+      - 6881:6881     #For qbittorrent
+      - 6881:6881/udp
+      - 9696:9696     #For Prowlarr
+      - 8191:8191     #For Flaresolverr
+    restart: unless-stopped
+    networks:
+      gluetun:
+        ipv4_address: 172.90.0.2
+
+networks:
+  gluetun:
+    driver: bridge
+    name: gluetun
+    ipam:
+      config:
+        - subnet: 172.90.0.0/16
 ```
 
 ## Grafana
