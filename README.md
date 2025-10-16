@@ -2,26 +2,31 @@
 
 This repository documents my raspberry pi server setup, covering configuration steps, docker compose files, and other useful resources. 
 
-#### Here's a list of services with links to their repositories:
-* [Nginx Proxy Manager](https://github.com/Nginxproxymanager/Nginx-Proxy-Manager)
-* [Portainer](https://github.com/Portainer/Portainer)
-* [Pihole](https://github.com/Pi-Hole/Pi-Hole)
-  * [Cloudflared](https://github.com/Cloudflare/Cloudflared)
-* [Vaultwarden](https://github.com/Dani-Garcia/Vaultwarden)
-* [WireGuard](https://www.wireguard.com/)
-* [Watchtower](https://github.com/Containrrr/Watchtower)
-* [Filebrowser](https://github.com/hurlenko/filebrowser-docker)
-* [Obsidian-LiveSync](https://github.com/vrtmrz/obsidian-livesync)
-* [Grafana/Pi Monitoring](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file)
-* [*arr Stack]()
-  * [Overseerr](https://github.com/sct/overseerr)
-  * [Radarr](https://github.com/Radarr/Radarr)
-  * [Sonarr](https://github.com/Sonarr/Sonarr)
-  * [Prowlarr](https://github.com/Prowlarr/Prowlarr)
-  * [Flaresolverr](https://github.com/FlareSolverr/FlareSolverr)
-  * [qBittorrent](https://github.com/linuxserver/docker-qbittorrent)
-* [Gluetun](https://github.com/qdm12/gluetun)
----
+## 🧩 Services Overview
+
+Here’s a list of all services included in this Raspberry Pi setup, along with short descriptions and repository links for reference.
+
+| Service | Description | Repository |
+|----------|--------------|-------------|
+| **[Nginx Proxy Manager](#nginx-proxy-manager)** | Manages reverse proxy configurations and SSL certificates through a simple web interface, allowing you to route domains to local services. | [Repository ↗︎](https://github.com/Nginxproxymanager/Nginx-Proxy-Manager) |
+| **[Portainer](#portainer)** | Web-based GUI for managing Docker containers, images, networks, and volumes. | [Repository ↗︎](https://github.com/Portainer/Portainer) |
+| **[Pi-hole](#pi-hole--cloudflared)** | Network-wide ad blocker acting as a DNS sinkhole to block unwanted domains. | [Repository ↗︎](https://github.com/Pi-Hole/Pi-Hole) |
+| ↳ **[Cloudflared](#pi-hole--cloudflared)** | Provides DNS over HTTPS (DoH) for encrypted DNS queries. | [Repository ↗︎](https://github.com/Cloudflare/Cloudflared) |
+| **[Vaultwarden](#bitwardenvaultwarden)** | Lightweight self-hosted Bitwarden-compatible password manager. | [Repository ↗︎](https://github.com/Dani-Garcia/Vaultwarden) |
+| **[WireGuard](#wireguard-vpn)** | Fast, secure VPN solution for remote access to your network and DNS. | [Repository ↗︎](https://www.wireguard.com/) |
+| **[Watchtower](#watchtower)** | Automatically monitors and updates running Docker containers with the latest images. | [Repository ↗︎](https://github.com/Containrrr/Watchtower) |
+| **[Filebrowser](#filebrowser)** | Lightweight web-based file manager to browse, upload, and organize files. | [Repository ↗︎](https://github.com/hurlenko/filebrowser-docker) |
+| **[Obsidian LiveSync](#obsidian-livesync)** | Self-hosted sync service for Obsidian, enabling encrypted note synchronization across devices. | [Repository ↗︎](https://github.com/vrtmrz/obsidian-livesync) |
+| **[Grafana / Pi Monitoring](#grafana)** | Visualizes system and Docker metrics via Prometheus and Grafana dashboards. | [Repository ↗︎](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring) |
+| **[Gluetun](#gluetun)** | VPN client container that routes traffic from other containers securely through supported VPN providers. | [Repository ↗︎](https://github.com/qdm12/gluetun) |
+| **[*arr Stack](#arr-stack)** | Suite of media automation tools for managing movies and TV shows. | — |
+| ↳ **[Overseerr](#arr-stack)** | Media request management interface for Radarr and Sonarr. | [Repository ↗︎](https://github.com/sct/overseerr) |
+| ↳ **[Radarr](#arr-stack)** | Automatically downloads and organizes movies. | [Repository ↗︎](https://github.com/Radarr/Radarr) |
+| ↳ **[Sonarr](#arr-stack)** | Automatically downloads and organizes TV shows. | [Repository ↗︎](https://github.com/Sonarr/Sonarr) |
+| ↳ **[Prowlarr](#arr-stack)** | Indexer manager and proxy for *arr apps. | [Repository ↗︎](https://github.com/Prowlarr/Prowlarr) |
+| ↳ **[Flaresolverr](#arr-stack)** | Handles Cloudflare protection for indexers that require JavaScript solving. | [Repository ↗︎](https://github.com/FlareSolverr/FlareSolverr) |
+| ↳ **[qBittorrent](#arr-stack)** | Torrent client used for downloading media, typically routed through Gluetun VPN. | [Repository ↗︎](https://github.com/linuxserver/docker-qbittorrent) |
+
 
 ## Prerequisites
 * Adequate storage for your needs. (Example: I used a 128GB microSD card with 20% used for all my services.)
@@ -286,8 +291,9 @@ The server side VPN is created, for the client side run the command below to get
 docker exec -it wireguard /app/show-peer {peer number or name}
 ```
 To add more clients in the future edit the peers variable in the docker-compose file and recreate the container.
+
 ## Watchtower
-Watchtower automatically updates running containers.
+Automatically monitors and updates your running Docker containers to keep them up to date with the latest images.
 ``` Bash
 docker logs watchtower
 ```
@@ -319,7 +325,7 @@ networks:
 ```
 
 ## Filebrowser
-Filebrowser is a simple file management tool.
+Lightweight web-based file manager that lets you browse, upload, and manage files on your Pi through a simple UI.
 ```Bash
 services:
   filebrowser:
@@ -383,164 +389,8 @@ networks:
 
 Next you will have to setup the database, I would recommend following this [Guide](https://www.reddit.com/r/selfhosted/comments/1eo7knj/guide_obsidian_with_free_selfhosted_instant_sync/)
 
-## *arr
-
-For my arr stack I run everything within the same docker compose configuration file. Seems logical since they are mostly dependent on eachother. The initial setup of all of these is pretty simple but if you have trouble or things you would like to optimize I would recommend using this guide [Trash Guide](https://trash-guides.info/).
-
-My docker compose stack is a little unique. I have mounted my NAS drive to my raspberry pi. You will have to change volumes specifically /mnt/BigBoi/x:/data part.
-
-``` Bash
-services:
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    environment:
-      - PUID=1026
-      - PGID=1000
-      - TZ=Europe/Stockholm                                 #change this
-    volumes:
-      - radarr_config:/config
-      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
-    ports:
-      - 7878:7878
-    restart: unless-stopped
-    networks:
-      arr:
-        ipv4_address: 172.100.0.2
-
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
-    environment:
-      - PUID=1026
-      - PGID=1000
-      - TZ=Europe/Stockholm                                 #change this
-    volumes:
-      - sonarr_config:/config
-      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
-    ports:
-      - 8989:8989
-    restart: unless-stopped
-    networks:
-      arr:
-        ipv4_address: 172.100.0.3
-    
-  qbittorrent:                                             #Run through gluetun
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    environment:
-      - PUID=1026                  
-      - PGID=1000
-      - TZ=Europe/Stockholm                                 #change this
-      - WEBUI_PORT=8081
-      - TORRENTING_PORT=6881
-    volumes:
-      - qbittorrent_config:/config
-      - /mnt/BigBoi/data/Downloads:/data/Downloads          #change this, in this example I have mounted my NAS share to my raspberry pi.
-    restart: unless-stopped
-    network_mode: "container:gluetun"
-    
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
-    environment:
-      - PUID=1026
-      - PGID=1000
-      - TZ=Europe/Stockholm                                #change this
-    volumes:
-      - overseerr_config:/config
-    ports:
-      - 5055:5055
-    restart: unless-stopped
-    networks:
-      arr:
-        ipv4_address: 172.100.0.4
-
-  prowlarr:                                              #Run through gluetun
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    environment:
-      - PUID=1026
-      - PGID=1000
-      - TZ=Europe/Stockholm                                #change this
-    volumes:
-      - prowlarr_config:/config
-    restart: unless-stopped
-    network_mode: "container:gluetun"
-
-  flaresolverr:                                            #Run through gluetun
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - LOG_HTML=${LOG_HTML:-false}
-      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-      - TZ=Europe/Stockholm                                #change this
-    volumes:
-      - flaresolverr_config:/config
-    restart: unless-stopped
-    network_mode: "container:gluetun"
-
-networks:
-  arr:
-    driver: bridge
-    name: arr
-    ipam:
-      config:
-        - subnet: 172.100.0.0/16
-
-volumes:
-  radarr_config:
-  sonarr_config:
-  overseerr_config:
-  prowlarr_config:
-  flaresolverr_config:
-  qbittorrent_config:
-```
-
-## Glueutun
-
-``` Bash
-services:
-  gluetun:
-    image: qmcgaw/gluetun:latest
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    volumes:
-      - ./data:/gluetun
-    environment:
-      - TZ=Europe/Stockholm                               #change all below.
-      - VPN_SERVICE_PROVIDER=                             
-      - VPN_TYPE=                                         
-      - OPENVPN_USER=
-      - OPENVPN_PASSWORD=
-      - SERVER_REGIONS=
-    ports:
-      - 8081:8081     #For qbittorrent
-      - 6881:6881     #For qbittorrent
-      - 6881:6881/udp
-      - 9696:9696     #For Prowlarr
-      - 8191:8191     #For Flaresolverr
-    restart: unless-stopped
-    networks:
-      gluetun:
-        ipv4_address: 172.90.0.2
-
-networks:
-  gluetun:
-    driver: bridge
-    name: gluetun
-    ipam:
-      config:
-        - subnet: 172.90.0.0/16
-```
-
 ## Grafana
-
-To setup grafana I followed oijkn's guide on github  [Oijkn](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file)
+Grafana visualized metrics and dashboards collected from Prometheus and other sources to monitor system and container performance. To setup grafana I followed oijkn's guide on github  [Oijkn](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file)
 
 ``` Bash
 services:
@@ -713,6 +563,168 @@ networks:
     labels:
       - "com.example.description=Monitoring Network"
       - "com.example.service=monitoring"
+```
+
+## Glueutun
+
+A secure VPN client container that routes traffic from other containers (like torrent or indexer services) through a VPN tunnel for privacy and IP protection.
+
+``` Bash
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./data:/gluetun
+    environment:
+      - TZ=Europe/Stockholm
+      - VPN_SERVICE_PROVIDER=change me
+      - VPN_TYPE=change me
+      - OPENVPN_USER=change me
+      - OPENVPN_PASSWORD=change me
+      - SERVER_REGIONS=change me
+      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24 #Needed to make arr stack reachable. First part is container IPs second it LAN not sure which one is needed but one of them is :P
+    ports:
+      - 8081:8081     #For qbittorrent
+      - 6881:6881     #For qbittorrent
+      - 6881:6881/udp
+      - 9696:9696     #For Prowlarr
+      - 8191:8191     #For Flaresolverr
+    restart: unless-stopped
+    networks:
+      gluetun:
+        ipv4_address: 172.90.0.2
+
+networks:
+  gluetun:
+    driver: bridge
+    name: gluetun
+    ipam:
+      config:
+        - subnet: 172.90.0.0/16
+```
+
+## *arr
+
+*arr family is a collection of media automation tools that manage downloading, organizing, and tracking movies and TV shows through indexers and torrent clients.
+
+For my arr stack I run everything within the same docker compose configuration file. Seems logical since they are mostly dependent on eachother. The initial setup of all of these is pretty simple but if you have trouble or things you would like to optimize I would recommend using this guide [Trash Guide](https://trash-guides.info/).
+
+My docker compose stack is a little unique. I have mounted my NAS drive to my raspberry pi. You will have to change volumes specifically /mnt/BigBoi/x:/data part.
+
+``` Bash
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                 #change this
+    volumes:
+      - radarr_config:/config
+      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    networks:
+      arr:
+        ipv4_address: 172.100.0.2
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                 #change this
+    volumes:
+      - sonarr_config:/config
+      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    networks:
+      arr:
+        ipv4_address: 172.100.0.3
+    
+  qbittorrent:                                             #Run through gluetun
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1026                  
+      - PGID=1000
+      - TZ=Europe/Stockholm                                 #change this
+      - WEBUI_PORT=8081
+      - TORRENTING_PORT=6881
+    volumes:
+      - qbittorrent_config:/config
+      - /mnt/BigBoi/data/Downloads:/data/Downloads          #change this, in this example I have mounted my NAS share to my raspberry pi.
+    restart: unless-stopped
+    network_mode: "container:gluetun"
+    
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                #change this
+    volumes:
+      - overseerr_config:/config
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+    networks:
+      arr:
+        ipv4_address: 172.100.0.4
+
+  prowlarr:                                              #Run through gluetun
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                #change this
+    volumes:
+      - prowlarr_config:/config
+    restart: unless-stopped
+    network_mode: "container:gluetun"
+
+  flaresolverr:                                            #Run through gluetun
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=Europe/Stockholm                                #change this
+    volumes:
+      - flaresolverr_config:/config
+    restart: unless-stopped
+    network_mode: "container:gluetun"
+
+networks:
+  arr:
+    driver: bridge
+    name: arr
+    ipam:
+      config:
+        - subnet: 172.100.0.0/16
+
+volumes:
+  radarr_config:
+  sonarr_config:
+  overseerr_config:
+  prowlarr_config:
+  flaresolverr_config:
+  qbittorrent_config:
 ```
 
 ## Receive Discord Alerts for Raspberry Pi Overheating
