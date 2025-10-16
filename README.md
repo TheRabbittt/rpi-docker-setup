@@ -19,13 +19,13 @@ Here’s a list of all services included in this Raspberry Pi setup, along with 
 | **[Obsidian LiveSync](#obsidian-livesync)** | Self-hosted sync service for Obsidian, enabling encrypted note synchronization across devices. | [Repository ↗︎](https://github.com/vrtmrz/obsidian-livesync) |
 | **[Grafana / Pi Monitoring](#grafana)** | Visualizes system and Docker metrics via Prometheus and Grafana dashboards. | [Repository ↗︎](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring) |
 | **[Gluetun](#gluetun)** | VPN client container that routes traffic from other containers securely through supported VPN providers. | [Repository ↗︎](https://github.com/qdm12/gluetun) |
-| **[*arr Stack](#arr-stack)** | Suite of media automation tools for managing movies and TV shows. | — |
-| ↳ **[Overseerr](#arr-stack)** | Media request management interface for Radarr and Sonarr. | [Repository ↗︎](https://github.com/sct/overseerr) |
-| ↳ **[Radarr](#arr-stack)** | Automatically downloads and organizes movies. | [Repository ↗︎](https://github.com/Radarr/Radarr) |
-| ↳ **[Sonarr](#arr-stack)** | Automatically downloads and organizes TV shows. | [Repository ↗︎](https://github.com/Sonarr/Sonarr) |
-| ↳ **[Prowlarr](#arr-stack)** | Indexer manager and proxy for *arr apps. | [Repository ↗︎](https://github.com/Prowlarr/Prowlarr) |
-| ↳ **[Flaresolverr](#arr-stack)** | Handles Cloudflare protection for indexers that require JavaScript solving. | [Repository ↗︎](https://github.com/FlareSolverr/FlareSolverr) |
-| ↳ **[qBittorrent](#arr-stack)** | Torrent client used for downloading media, typically routed through Gluetun VPN. | [Repository ↗︎](https://github.com/linuxserver/docker-qbittorrent) |
+| **[*arr Stack](#*arr)** | Suite of media automation tools for managing movies and TV shows. | — |
+| ↳ **[Overseerr](#*arr)** | Media request management interface for Radarr and Sonarr. | [Repository ↗︎](https://github.com/sct/overseerr) |
+| ↳ **[Radarr](#*arr)** | Automatically downloads and organizes movies. | [Repository ↗︎](https://github.com/Radarr/Radarr) |
+| ↳ **[Sonarr](#*arr)** | Automatically downloads and organizes TV shows. | [Repository ↗︎](https://github.com/Sonarr/Sonarr) |
+| ↳ **[Prowlarr](#*arr)** | Indexer manager and proxy for *arr apps. | [Repository ↗︎](https://github.com/Prowlarr/Prowlarr) |
+| ↳ **[Flaresolverr](#*arr)** | Handles Cloudflare protection for indexers that require JavaScript solving. | [Repository ↗︎](https://github.com/FlareSolverr/FlareSolverr) |
+| ↳ **[qBittorrent](#*arr)** | Torrent client used for downloading media, typically routed through Gluetun VPN. | [Repository ↗︎](https://github.com/linuxserver/docker-qbittorrent) |
 
 
 ## Prerequisites
@@ -565,7 +565,7 @@ networks:
       - "com.example.service=monitoring"
 ```
 
-## Glueutun
+## Gluetun
 
 A secure VPN client container that routes traffic from other containers (like torrent or indexer services) through a VPN tunnel for privacy and IP protection.
 
