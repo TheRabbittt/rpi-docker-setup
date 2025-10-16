@@ -1,4 +1,9 @@
-# <img src="https://github.com/user-attachments/assets/39d7950d-8c68-4845-a20c-97ba42d940cd" width="60" alt="logo"> Raspberry-Pi Setup
+# <img src="https://github.com/user-attachments/assets/39d7950d-8c68-4845-a20c-97ba42d940cd" width="60" alt="logo">Raspberry Pi Home Server with Docker: Nginx Proxy, Pi-hole, Vaultwarden, Grafana, *arr Stack, etc
+
+![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
+![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-4B-red?logo=raspberrypi)
+![Maintained](https://img.shields.io/badge/Maintained-Yes-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 This repository documents my raspberry pi server setup, covering configuration steps, docker compose files, and other useful resources. 
 
