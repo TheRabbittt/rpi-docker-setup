@@ -19,13 +19,13 @@ Here’s a list of all services included in this Raspberry Pi setup, along with 
 | **[Obsidian LiveSync](#obsidian-livesync)** | Self-hosted sync service for Obsidian, enabling encrypted note synchronization across devices. | [Repository ↗︎](https://github.com/vrtmrz/obsidian-livesync) |
 | **[Grafana / Pi Monitoring](#grafana)** | Visualizes system and Docker metrics via Prometheus and Grafana dashboards. | [Repository ↗︎](https://github.com/oijkn/Docker-Raspberry-PI-Monitoring) |
 | **[Gluetun](#gluetun)** | VPN client container that routes traffic from other containers securely through supported VPN providers. | [Repository ↗︎](https://github.com/qdm12/gluetun) |
-| **[*arr Stack](#*arr)** | Suite of media automation tools for managing movies and TV shows. | — |
-| ↳ **[Overseerr](#*arr)** | Media request management interface for Radarr and Sonarr. | [Repository ↗︎](https://github.com/sct/overseerr) |
-| ↳ **[Radarr](#*arr)** | Automatically downloads and organizes movies. | [Repository ↗︎](https://github.com/Radarr/Radarr) |
-| ↳ **[Sonarr](#*arr)** | Automatically downloads and organizes TV shows. | [Repository ↗︎](https://github.com/Sonarr/Sonarr) |
-| ↳ **[Prowlarr](#*arr)** | Indexer manager and proxy for *arr apps. | [Repository ↗︎](https://github.com/Prowlarr/Prowlarr) |
-| ↳ **[Flaresolverr](#*arr)** | Handles Cloudflare protection for indexers that require JavaScript solving. | [Repository ↗︎](https://github.com/FlareSolverr/FlareSolverr) |
-| ↳ **[qBittorrent](#*arr)** | Torrent client used for downloading media, typically routed through Gluetun VPN. | [Repository ↗︎](https://github.com/linuxserver/docker-qbittorrent) |
+| **[*arr Stack](#arr-stack)** | Suite of media automation tools for managing movies and TV shows. | — |
+| ↳ **[Overseerr](#arr-stack)** | Media request management interface for Radarr and Sonarr. | [Repository ↗︎](https://github.com/sct/overseerr) |
+| ↳ **[Radarr](#arr-stack)** | Automatically downloads and organizes movies. | [Repository ↗︎](https://github.com/Radarr/Radarr) |
+| ↳ **[Sonarr](#arr-stack)** | Automatically downloads and organizes TV shows. | [Repository ↗︎](https://github.com/Sonarr/Sonarr) |
+| ↳ **[Prowlarr](#arr-stack)** | Indexer manager and proxy for *arr apps. | [Repository ↗︎](https://github.com/Prowlarr/Prowlarr) |
+| ↳ **[Flaresolverr](#arr-stack)** | Handles Cloudflare protection for indexers that require JavaScript solving. | [Repository ↗︎](https://github.com/FlareSolverr/FlareSolverr) |
+| ↳ **[qBittorrent](#arr-stack)** | Torrent client used for downloading media, typically routed through Gluetun VPN. | [Repository ↗︎](https://github.com/linuxserver/docker-qbittorrent) |
 
 
 ## Prerequisites
@@ -589,12 +589,12 @@ services:
       - OPENVPN_USER=change me
       - OPENVPN_PASSWORD=change me
       - SERVER_REGIONS=change me
-      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24 #Needed to make arr stack reachable. First part is container IPs second it LAN not sure which one is needed but one of them is :P
+      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24 #Needed to make  stack reachable. First part is container IPs second it LAN not sure which one is needed but one of them is :P
     ports:
       - 8081:8081     #For qbittorrent
       - 6881:6881     #For qbittorrent
       - 6881:6881/udp
-      - 9696:9696     #For Prowlarr
+      - 9696:9696     #For Prowl
       - 8191:8191     #For Flaresolverr
     restart: unless-stopped
     networks:
@@ -610,7 +610,7 @@ networks:
         - subnet: 172.90.0.0/16
 ```
 
-## *arr
+## arr stack
 
 *arr family is a collection of media automation tools that manage downloading, organizing, and tracking movies and TV shows through indexers and torrent clients.
 
