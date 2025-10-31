@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta name="google-site-verification" content="DM6jIPwqj6PnnKRbOPOTJPk5Rsr9wiWlliflbWX9UkM" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Raspberry Pi Home Server with Docker: Nginx Proxy, Pi-hole, Vaultwarden, Grafana, *arr Stack, etc | rpi-docker-setup</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Raspberry Pi Home Server with Docker: Nginx Proxy, Pi-hole, Vaultwarden, Grafana, *arr Stack, etc" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Self-hosted Raspberry Pi home server using Docker Compose — includes Nginx Proxy Manager, Pi-hole, Vaultwarden, WireGuard, Grafana, and the *arr Stack." />
+<meta property="og:description" content="Self-hosted Raspberry Pi home server using Docker Compose — includes Nginx Proxy Manager, Pi-hole, Vaultwarden, WireGuard, Grafana, and the *arr Stack." />
+<link rel="canonical" href="https://therabbittt.github.io/rpi-docker-setup/" />
+<meta property="og:url" content="https://therabbittt.github.io/rpi-docker-setup/" />
+<meta property="og:site_name" content="rpi-docker-setup" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Raspberry Pi Home Server with Docker: Nginx Proxy, Pi-hole, Vaultwarden, Grafana, *arr Stack, etc" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Self-hosted Raspberry Pi home server using Docker Compose — includes Nginx Proxy Manager, Pi-hole, Vaultwarden, WireGuard, Grafana, and the *arr Stack.","headline":"Raspberry Pi Home Server with Docker: Nginx Proxy, Pi-hole, Vaultwarden, Grafana, *arr Stack, etc","name":"rpi-docker-setup","url":"https://therabbittt.github.io/rpi-docker-setup/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/rpi-docker-setup/assets/css/style.css?v=d7eb5aaee8ffac43e2ae4f0b94196e8b8cfa8249">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/rpi-docker-setup/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="container-lg px-3 my-5 markdown-body">
+      
+      <h1><a href="https://therabbittt.github.io/rpi-docker-setup/">rpi-docker-setup</a></h1>
+      
+
+      <h1 id="raspberry-pi-home-server-with-docker-nginx-proxy-pi-hole-vaultwarden-grafana-arr-stack-etc"><img src="https://github.com/user-attachments/assets/39d7950d-8c68-4845-a20c-97ba42d940cd" width="60" alt="logo" />Raspberry Pi Home Server with Docker: Nginx Proxy, Pi-hole, Vaultwarden, Grafana, *arr Stack, etc</h1>
+
+<p><img src="https://img.shields.io/badge/Docker-Ready-blue?logo=docker" alt="Docker" />
+<img src="https://img.shields.io/badge/Raspberry%20Pi-4B-red?logo=raspberrypi" alt="Raspberry Pi" />
+<img src="https://img.shields.io/badge/Maintained-Yes-brightgreen" alt="Maintained" />
+<img src="https://img.shields.io/badge/License-MIT-green" alt="License" /></p>
+
+<p>This repository documents my raspberry pi server setup, covering configuration steps, docker compose files, and other useful resources.</p>
+
+<h2 id="-services-overview">🧩 Services Overview</h2>
+
+<p>Here’s a list of all services included in this Raspberry Pi setup, along with short descriptions and repository links for reference.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>Description</th>
+      <th>Repository</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong><a href="#nginx-proxy-manager">Nginx Proxy Manager</a></strong></td>
+      <td>Manages reverse proxy configurations and SSL certificates through a simple web interface, allowing you to route domains to local services.</td>
+      <td><a href="https://github.com/Nginxproxymanager/Nginx-Proxy-Manager">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#portainer">Portainer</a></strong></td>
+      <td>Web-based GUI for managing Docker containers, images, networks, and volumes.</td>
+      <td><a href="https://github.com/Portainer/Portainer">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#pi-hole--cloudflared">Pi-hole</a></strong></td>
+      <td>Network-wide ad blocker acting as a DNS sinkhole to block unwanted domains.</td>
+      <td><a href="https://github.com/Pi-Hole/Pi-Hole">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td>↳ <strong><a href="#pi-hole--cloudflared">Cloudflared</a></strong></td>
+      <td>Provides DNS over HTTPS (DoH) for encrypted DNS queries.</td>
+      <td><a href="https://github.com/Cloudflare/Cloudflared">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#bitwardenvaultwarden">Vaultwarden</a></strong></td>
+      <td>Lightweight self-hosted Bitwarden-compatible password manager.</td>
+      <td><a href="https://github.com/Dani-Garcia/Vaultwarden">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#wireguard-vpn">WireGuard</a></strong></td>
+      <td>Fast, secure VPN solution for remote access to your network and DNS.</td>
+      <td><a href="https://www.wireguard.com/">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#watchtower">Watchtower</a></strong></td>
+      <td>Automatically monitors and updates running Docker containers with the latest images.</td>
+      <td><a href="https://github.com/Containrrr/Watchtower">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#filebrowser">Filebrowser</a></strong></td>
+      <td>Lightweight web-based file manager to browse, upload, and organize files.</td>
+      <td><a href="https://github.com/hurlenko/filebrowser-docker">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#obsidian-livesync">Obsidian LiveSync</a></strong></td>
+      <td>Self-hosted sync service for Obsidian, enabling encrypted note synchronization across devices.</td>
+      <td><a href="https://github.com/vrtmrz/obsidian-livesync">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#grafana">Grafana / Pi Monitoring</a></strong></td>
+      <td>Visualizes system and Docker metrics via Prometheus and Grafana dashboards.</td>
+      <td><a href="https://github.com/oijkn/Docker-Raspberry-PI-Monitoring">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#gluetun">Gluetun</a></strong></td>
+      <td>VPN client container that routes traffic from other containers securely through supported VPN providers.</td>
+      <td><a href="https://github.com/qdm12/gluetun">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td><strong><a href="#arr-stack">*arr Stack</a></strong></td>
+      <td>Suite of media automation tools for managing movies and TV shows.</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>↳ <strong><a href="#arr-stack">Overseerr</a></strong></td>
+      <td>Media request management interface for Radarr and Sonarr.</td>
+      <td><a href="https://github.com/sct/overseerr">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td>↳ <strong><a href="#arr-stack">Radarr</a></strong></td>
+      <td>Automatically downloads and organizes movies.</td>
+      <td><a href="https://github.com/Radarr/Radarr">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td>↳ <strong><a href="#arr-stack">Sonarr</a></strong></td>
+      <td>Automatically downloads and organizes TV shows.</td>
+      <td><a href="https://github.com/Sonarr/Sonarr">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td>↳ <strong><a href="#arr-stack">Prowlarr</a></strong></td>
+      <td>Indexer manager and proxy for *arr apps.</td>
+      <td><a href="https://github.com/Prowlarr/Prowlarr">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td>↳ <strong><a href="#arr-stack">Flaresolverr</a></strong></td>
+      <td>Handles Cloudflare protection for indexers that require JavaScript solving.</td>
+      <td><a href="https://github.com/FlareSolverr/FlareSolverr">Repository ↗︎</a></td>
+    </tr>
+    <tr>
+      <td>↳ <strong><a href="#arr-stack">qBittorrent</a></strong></td>
+      <td>Torrent client used for downloading media, typically routed through Gluetun VPN.</td>
+      <td><a href="https://github.com/linuxserver/docker-qbittorrent">Repository ↗︎</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+  <li>Adequate storage for your needs. (Example: I used a 128GB microSD card with 20% used for all my services.)</li>
+  <li>A Raspberry Pi with an installed and updated OS. (I used <a href="https://www.raspberrypi.com/software/">Raspberry Pi OS</a> 64-bit, based on Debian, but any OS should work as long as you know the commands for it.)</li>
+  <li>Static IP: Recommended for consistent access.</li>
+</ul>
+
+<h2 id="installing-docker">Installing Docker</h2>
+
+<p>To get started, install <code class="language-plaintext highlighter-rouge">docker</code> and <code class="language-plaintext highlighter-rouge">docker-compose</code>.</p>
+
+<p>Docker is a tool that simplifies application deployment in lightweight containers. Containers share the same OS resources, so they’re more efficient than virtual machines.</p>
+
+<p>Docker compose is a tool that simplifies the setup of multiple docker containers through YAML configuration files.</p>
+
+<p>Note: Installation varies by OS. Refer to <a href="https://docs.docker.com/desktop/install/debian/">Docker’s Official Site</a> for detailed instructions on your specific OS.</p>
+
+<h4 id="docker-on-debian">Docker on Debian</h4>
+<pre><code class="language-Bash">curl -sSl https://get.docker.com | sh
+</code></pre>
+<p>To avoid running Docker commands as root, add your user to the Docker group:</p>
+<pre><code class="language-Bash">sudo usermod -aG docker ${whoami}
+</code></pre>
+<p>You may need to log out and back in for this to take effect.</p>
+
+<p>Verify that Docker is installed by running your first container:</p>
+<pre><code class="language-Bash">sudo docker run hello-world
+</code></pre>
+<p>Install docker compose:</p>
+<pre><code class="language-Bash">sudo apt-get install docker-compose-plugin
+</code></pre>
+<p>Verify that Docker Compose is installed:</p>
+<pre><code class="language-Bash">docker compose version
+</code></pre>
+
+<h2 id="nginx-proxy-manager">NGINX Proxy Manager</h2>
+
+<p>NGINX Proxy Manager lets you manage domains and control which application each domain points to. For example, you can create a domain name for Pi-hole (e.g., pihole.website.io) instead of using its IP address. This setup won’t be public; only devices within your LAN will be able to access these services.</p>
+
+<p>Tutorial: Credit to “Wolfgang’s Channel” on youtube for this <a href="https://www.youtube.com/watch?v=qlcVx-k-02E">video</a> guide (I used deSEC for DNS, which is free.)</p>
+
+<pre><code class="language-Bash">services:
+  nginx_proxy_manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx_proxy_manager
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./config.json:/app/config/production.json
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    restart: always
+    networks:
+      proxy:
+        ipv4_address: 172.20.0.2
+
+networks:
+  proxy:
+    name: proxy
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+</code></pre>
+
+<p>Run NGINX Proxy Manager with the following Docker Compose configuration:</p>
+<pre><code class="language-Bash">docker compose up -d
+</code></pre>
+<p>Access NGINX Proxy Manager at <code class="language-plaintext highlighter-rouge">http://{raspberrypi-ip}:81</code>.</p>
+
+<h2 id="portainer">Portainer</h2>
+<p>Portainer is a GUI tool for managing Docker containers.</p>
+
+<p>To organize my docker compose files, I create a directory for each service/application and place the corresponding docker compose file in that directory.</p>
+
+<h5 id="portainer-compose-file">Portainer Compose File</h5>
+<pre><code class="language-Bash">services:
+   portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    ports:
+      - 9443:9443
+    volumes:
+      - data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      portainer:
+        ipv4_address: 172.30.0.2
+      proxy:
+        ipv4_address: 172.20.0.3
+    restart: unless-stopped
+  
+volumes:
+  data:
+  
+networks:
+  portainer:
+    name: portainer
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+  proxy:
+     external: true
+</code></pre>
+<p>Run Portainer with:</p>
+<pre><code class="language-Bash">docker compose up -d
+</code></pre>
+<p>Access Portainer at <code class="language-plaintext highlighter-rouge">https://{raspberrypi-ip}:9443</code>.</p>
+
+<h2 id="pi-hole--cloudflared">Pi-Hole + Cloudflared</h2>
+
+<p>Pi-Hole acts as a <a href="https://en.wikipedia.org/wiki/DNS_sinkhole">DNS sinkhole</a>, blocking ads and telemetry requests. Paired with Cloudflared, it allows DNS over HTTPS (DoH), encrypting DNS queries.</p>
+
+<pre><code class="language-Bash">services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8061:80/tcp"
+      - "4443:443/tcp"
+    environment:
+      TZ: 'Europe/Stockholm'                  #change this
+      WEBPASSWORD: password                   #change this
+    volumes:
+       - './data/etc:/etc/pihole/'
+    restart: unless-stopped
+    networks:
+      pihole:
+        ipv4_address: 172.50.0.2
+      proxy:
+        ipv4_address: 172.20.0.4
+
+  cloudflared-cf:
+    container_name: cloudflared-cf
+    image: cloudflare/cloudflared:latest
+    command: proxy-dns --address 0.0.0.0 --port 5353 --upstream https://1.1.1.1/dns-query --upstream https://1.0.0.1/dns-query
+    restart: unless-stopped
+    networks:
+      pihole:
+        ipv4_address: 172.50.1.1
+
+  cloudflared-goog:
+    container_name: cloudflared-goog
+    image: cloudflare/cloudflared:latest
+    command: proxy-dns --address 0.0.0.0 --port 5353 --upstream https://8.8.8.8/dns-query --upstream https://8.8.4.4/dns-query
+    restart: unless-stopped
+    networks:
+      pihole:
+        ipv4_address: 172.50.8.8
+
+networks:
+  pihole:
+    name: pihole
+    ipam:
+      config:
+        - subnet: 172.50.0.0/16
+  proxy:
+    external: true
+</code></pre>
+<p>After running the docker compose yml you should be able to reach pihole through <code class="language-plaintext highlighter-rouge">http://{raspberrypi_ip}:8061/admin</code>. Login password should be “changeme” although you should change the password which you can do by going into the docker container.</p>
+
+<pre><code class="language-Bash">docker exec -it &lt;container_id&gt; bash
+pihole -a -p &lt;password&gt;
+</code></pre>
+
+<p>For the finale configuration, go into settings in pihole and change the upstream DNS to the docker container IP addresses of cloudflared (172.30.1.1 &amp; 172.30.8.8). Now that should be it for the raspberry pi, change your DNS server (typically your router) to point to the raspberry pi and boom…. you are done.</p>
+
+<h2 id="bitwardenvaultwarden">Bitwarden/Vaultwarden</h2>
+<p>Bitwarden is a password manager and vaultwarden is a more lightweight option that you can host yourself. This works with the bitwarden app and extension.</p>
+
+<pre><code class="language-Bash">services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      - WEBSOCKET_ENABLED=true
+    volumes:
+      - ./data:/data
+    ports:
+      - 8080:80
+    networks:
+      bitwarden:
+        ipv4_address: 172.70.0.2
+      proxy:
+        ipv4_address: 172.20.0.5
+
+networks:
+  bitwarden:
+    name: bitwarden
+    ipam:
+      config:
+        - subnet: 172.70.0.0/16
+  proxy:
+    external: true                             
+</code></pre>
+
+<p>Once the container is up you should be able to reach bitwarden through <code class="language-plaintext highlighter-rouge">http://{raspberrypi-ip}:8080</code>, although you won’t be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest.</p>
+
+<h2 id="wireguard-vpn">Wireguard VPN</h2>
+<p>I also have a VPN on my Pi to be able to reach my DNS and my LAN in general from outside my network. There are different options out there but I choose wireguard and found it simple to configure.</p>
+<pre><code class="language-Bash">services:
+  wireguard:
+    image: linuxserver/wireguard
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Stockholm                                    # Change this
+      - SERVERURL=auto #optional                               # Set to automatically find server's external IP   
+      - SERVERPORT=51820 #optional
+      - PEERS=3 #optional                                      # Change this to the number of clients needed
+      - PEERDNS=172.20.0.4  #optional                          # Pi-Hole docker IP Address (most likely a 172.... address)
+      - INTERNAL_SUBNET=10.13.13.0 #optional
+      - ALLOWEDIPS=0.0.0.0/0 #optional
+    volumes:
+      - /home/pi/wireguard/config:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - 51820:51820/udp                                        # Forward port 51820/udp on your router to the server IP
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    restart: unless-stopped
+    networks:
+      wireguard:
+        ipv4_address: 172.40.0.2
+      proxy:
+        ipv4_address: 172.20.0.7
+
+networks:
+  wireguard:
+    name: wireguard
+    ipam:
+      config:
+        - subnet: 172.40.0.0/16
+  proxy:
+     external: true
+</code></pre>
+<p>The server side VPN is created, for the client side run the command below to get a QR code of the configuration for the client.</p>
+<pre><code class="language-Bash">docker exec -it wireguard /app/show-peer {peer number or name}
+</code></pre>
+<p>To add more clients in the future edit the peers variable in the docker-compose file and recreate the container.</p>
+
+<h2 id="watchtower">Watchtower</h2>
+<p>Automatically monitors and updates your running Docker containers to keep them up to date with the latest images.</p>
+<pre><code class="language-Bash">docker logs watchtower
+</code></pre>
+
+<pre><code class="language-Bash">services:
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    environment:
+      TZ: Europe/Stockholm
+      WATCHTOWER_ROLLING_RESTART: 'true'
+      #WATCHTOWER_MONITOR_ONLY: 'true'
+      WATCHTOWER_SCHEDULE: '0 0 0 * * 0'          #Runs Once A Week (Cron Epression)
+      WATCHTOWER_CLEANUP: 'true'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      watchtower:
+        ipv4_address: 172.120.0.2
+
+networks:
+  watchtower:
+    name: watchtower
+    ipam:
+      config:
+        - subnet: 172.120.0.0/16
+</code></pre>
+
+<h2 id="filebrowser">Filebrowser</h2>
+<p>Lightweight web-based file manager that lets you browse, upload, and manage files on your Pi through a simple UI.</p>
+<pre><code class="language-Bash">services:
+  filebrowser:
+    container_name: filebrowser
+    image: hurlenko/filebrowser
+    user: "${UID}:${GID}"
+    ports:
+      - 444:8080
+    volumes:
+      - ./DATA_DIR:/data
+      - ./CONFIG_DIR:/config
+    environment:
+      - FB_BASEURL=/filebrowser
+    networks:
+      filebrowser:
+        ipv4_address: 172.110.0.2
+      proxy:
+        ipv4_address: 172.20.0.6
+    restart: unless-stopped
+
+networks:
+  filebrowser:
+    name: filebrowser
+    ipam:
+      config:
+        - subnet: 172.110.0.0/16
+  proxy:
+     external: true
+</code></pre>
+
+<h2 id="obsidian-livesync">Obsidian-LiveSync</h2>
+
+<p>Obsidian is a note-taking app that uses plain-text Markdown files stored locally. Obsidian LiveSync is a self-hosted synchronization plugin you can run on a Raspberry Pi, enabling real-time, end-to-end encrypted syncing of your notes across multiple devices without relying on third-party cloud services.</p>
+
+<pre><code class="language-Bash">services:
+   couchdb-obsidian-livesync:
+    container_name: obsidian-livesync
+    image: couchdb:latest
+    environment:
+      - TZ=Europe/Stockholm         #change this
+      - COUCHDB_USER=admin          #change this
+      - COUCHDB_PASSWORD=password   #change this
+    volumes:
+      - ./data:/opt/couchdb/data
+      - ./etc:/opt/couchdb/etc/local.d
+    ports:
+      - "5984:5984"
+    networks:
+      obsidian:
+        ipv4_address: 172.60.0.2
+    restart: unless-stopped
+  
+networks:
+  obsidian:
+    name: obsidian
+    ipam:
+      config:
+        - subnet: 172.60.0.0/16
+</code></pre>
+
+<p>Next you will have to setup the database, I would recommend following this <a href="https://www.reddit.com/r/selfhosted/comments/1eo7knj/guide_obsidian_with_free_selfhosted_instant_sync/">Guide</a></p>
+
+<h2 id="grafana">Grafana</h2>
+<p>Grafana visualized metrics and dashboards collected from Prometheus and other sources to monitor system and container performance. To setup grafana I followed oijkn’s guide on github  <a href="https://github.com/oijkn/Docker-Raspberry-PI-Monitoring?tab=readme-ov-file">Oijkn</a></p>
+
+<pre><code class="language-Bash">services:
+  grafana:
+    container_name: monitoring-grafana
+    image: grafana/grafana:latest
+    hostname: rpi-grafana
+    restart: unless-stopped
+    user: "472"
+    networks:
+      - monitor
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./grafana/.env
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.example.description=Grafana Dashboard"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  cadvisor:
+    container_name: monitoring-cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    hostname: rpi-cadvisor
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    networks:
+      - monitor
+    expose:
+      - 8080
+    command:
+      - '-housekeeping_interval=15s'
+      - '-docker_only=true'
+      - '-store_container_labels=false'
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.example.description=cAdvisor Container Monitoring"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 256m
+    mem_reservation: 128m
+
+  node-exporter:
+    container_name: monitoring-node-exporter
+    image: prom/node-exporter:latest
+    hostname: rpi-exporter
+    restart: unless-stopped
+    networks:
+      - monitor
+    expose:
+      - 9100
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/host
+      - --collector.filesystem.ignored-mount-points
+      - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /:/host:ro,rslave
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:9100/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.example.description=Node Exporter"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 128m
+    mem_reservation: 64m
+
+  prometheus:
+    container_name: monitoring-prometheus
+    image: prom/prometheus:latest
+    hostname: rpi-prometheus
+    restart: unless-stopped
+    user: "nobody"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1y'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - monitor
+    expose:
+      - 9090
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus:/etc/prometheus/
+    depends_on:
+      - cadvisor
+      - node-exporter
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.example.description=Prometheus Time Series Database"
+      - "com.example.service=monitoring"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 1g
+    mem_reservation: 512m
+
+volumes:
+  grafana-data:
+    labels:
+      - "com.example.description=Grafana Persistent Data"
+      - "com.example.service=monitoring"
+  prometheus-data:
+    labels:
+      - "com.example.description=Prometheus Persistent Data"
+      - "com.example.service=monitoring"
+
+networks:
+  monitor:
+    driver: bridge
+    name: grafana
+    ipam:
+      config:
+        - subnet: 172.80.0.0/16
+          gateway: 172.80.0.1
+    labels:
+      - "com.example.description=Monitoring Network"
+      - "com.example.service=monitoring"
+</code></pre>
+
+<h2 id="gluetun">Gluetun</h2>
+
+<p>A secure VPN client container that routes traffic from other containers (like torrent or indexer services) through a VPN tunnel for privacy and IP protection.</p>
+
+<pre><code class="language-Bash">services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./data:/gluetun
+    environment:
+      - TZ=Europe/Stockholm
+      - VPN_SERVICE_PROVIDER=change me
+      - VPN_TYPE=change me
+      - OPENVPN_USER=change me
+      - OPENVPN_PASSWORD=change me
+      - SERVER_REGIONS=change me
+      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24 #Needed to make  stack reachable. First part is container IPs second it LAN not sure which one is needed but one of them is :P
+    ports:
+      - 8081:8081     #For qbittorrent
+      - 6881:6881     #For qbittorrent
+      - 6881:6881/udp
+      - 9696:9696     #For Prowl
+      - 8191:8191     #For Flaresolverr
+    restart: unless-stopped
+    networks:
+      gluetun:
+        ipv4_address: 172.90.0.2
+
+networks:
+  gluetun:
+    driver: bridge
+    name: gluetun
+    ipam:
+      config:
+        - subnet: 172.90.0.0/16
+</code></pre>
+
+<h2 id="arr-stack">arr stack</h2>
+
+<p>*arr family is a collection of media automation tools that manage downloading, organizing, and tracking movies and TV shows through indexers and torrent clients.</p>
+
+<p>For my arr stack I run everything within the same docker compose configuration file. Seems logical since they are mostly dependent on eachother. The initial setup of all of these is pretty simple but if you have trouble or things you would like to optimize I would recommend using this guide <a href="https://trash-guides.info/">Trash Guide</a>.</p>
+
+<p>My docker compose stack is a little unique. I have mounted my NAS drive to my raspberry pi. You will have to change volumes specifically /mnt/BigBoi/x:/data part.</p>
+
+<pre><code class="language-Bash">services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                 #change this
+    volumes:
+      - radarr_config:/config
+      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    networks:
+      arr:
+        ipv4_address: 172.100.0.2
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                 #change this
+    volumes:
+      - sonarr_config:/config
+      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    networks:
+      arr:
+        ipv4_address: 172.100.0.3
+    
+  qbittorrent:                                             #Run through gluetun
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1026                  
+      - PGID=1000
+      - TZ=Europe/Stockholm                                 #change this
+      - WEBUI_PORT=8081
+      - TORRENTING_PORT=6881
+    volumes:
+      - qbittorrent_config:/config
+      - /mnt/BigBoi/data/Downloads:/data/Downloads          #change this, in this example I have mounted my NAS share to my raspberry pi.
+    restart: unless-stopped
+    network_mode: "container:gluetun"
+    
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                #change this
+    volumes:
+      - overseerr_config:/config
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+    networks:
+      arr:
+        ipv4_address: 172.100.0.4
+
+  prowlarr:                                              #Run through gluetun
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1026
+      - PGID=1000
+      - TZ=Europe/Stockholm                                #change this
+    volumes:
+      - prowlarr_config:/config
+    restart: unless-stopped
+    network_mode: "container:gluetun"
+
+  flaresolverr:                                            #Run through gluetun
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=Europe/Stockholm                                #change this
+    volumes:
+      - flaresolverr_config:/config
+    restart: unless-stopped
+    network_mode: "container:gluetun"
+
+networks:
+  arr:
+    driver: bridge
+    name: arr
+    ipam:
+      config:
+        - subnet: 172.100.0.0/16
+
+volumes:
+  radarr_config:
+  sonarr_config:
+  overseerr_config:
+  prowlarr_config:
+  flaresolverr_config:
+  qbittorrent_config:
+</code></pre>
+
+<h2 id="receive-discord-alerts-for-raspberry-pi-overheating">Receive Discord Alerts for Raspberry Pi Overheating</h2>
+
+<p>First create a new server in Discord where you will get your alerts. Find the webhook link for that server and keep the link somewhere for now.</p>
+
+<p>On the raspberry pi create a file, you can call it anything, I named it cpu_temp.sh. Paste what’s below into it and place the discord webhook link at the correct variable in the script:</p>
+
+<p>NOTE: Credit to Dave McKay for the script and tutorial on how to do it <a href="https://www.howtogeek.com/discord-slack-alert-raspberry-pi-too-hot/">LINK</a></p>
+
+<pre><code class="language-Bash">#!/bin/bash
+
+# get CPU temperature in Celsius
+pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2)}')
+
+# for Fahrenheit temperatures, use this line instead
+# pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2 * 1.8)+32}')
+
+# round down to an integer value
+pi_temp=$(echo $pi_temp | awk -F "[.]" '{print($1)}')
+
+# get the hostname, so we know which Pi is sending the alert
+this_pi=$(hostname)
+
+discord_pi_webhook="Discord Webhook Link"
+
+if [[ "$pi_temp" -ge 50 ]]; then
+  curl -H "Content-Type: application/json" -X POST -d '{"content":"'"ALERT! ${this_pi} CPU temp is: ${pi_temp}"'"}' $discord_pi_webhook
+fi
+</code></pre>
+
+<p>To test it and make sure it’s working change the 45 in the if statement to something lower like 20. Run the file ./cpu_temp.sh and you should get a notification in Discord.</p>
+
+<p>Now to automate this I used systemd timers and used this as a reference on what to do <a href="https://www.howtogeek.com/replace-cron-jobs-with-systemd-timers/">LINK</a>.</p>
+
+<p>Create a pialert.service and pialert.timer file at /etc/systemd/system</p>
+
+<p>pialert.service</p>
+
+<pre><code class="language-Bash">Description="Runs pi alert script"
+Requires=cpu_temp.sh
+
+[Service]
+Type=simple
+ExecStart=/home/admin/pi-alert/cpu_temp.sh
+User=admin #change this to your user
+</code></pre>
+
+<p>pialert.timer</p>
+
+<pre><code class="language-Bash">[Unit]
+Description="Timer for the pialert.service"
+
+[Timer]
+Unit=pialert.service
+OnBootSec=5min
+OnUnitActiveSec=10min #how often it should run
+
+[Install]
+WantedBy=timers.target
+</code></pre>
+
+
+
+      
+      <div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        This site is open source. <a href="https://github.com/TheRabbittt/rpi-docker-setup/edit/main/README.md">Improve this page</a>.
+      </div>
+      
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.1.0/anchor.min.js" integrity="sha256-lZaRhKri35AyJSypXXs4o6OPFTbTmUoltBbDCbdzegg=" crossorigin="anonymous"></script>
+    <script>anchors.add();</script>
+  </body>
+</html>
