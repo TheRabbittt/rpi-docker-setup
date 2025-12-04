@@ -1,4 +1,4 @@
-# <img src="https://github.com/user-attachments/assets/39d7950d-8c68-4845-a20c-97ba42d940cd" width="60" alt="logo">Raspberry Pi Home Server with Docker: Nginx Proxy, Pi-hole, Vaultwarden, Grafana, *arr Stack, etc
+# <img src="https://github.com/user-attachments/assets/39d7950d-8c68-4845-a20c-97ba42d940cd" width="60" alt="logo">Raspberry Pi Home Server with Docker
 
 ![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
 ![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-4B-red?logo=raspberrypi)
