@@ -71,6 +71,11 @@ Verify that Docker Compose is installed:
 ``` Bash
 docker compose version
 ```
+To use docker compose I would recommend creating a directory for each container you will create. For example I have my setup similar to down below for each exisiting container/container stack on my setup.
+
+```/home/user/docker/nginx-proxy-manager``` 
+
+Within this folder I create the ```docker-compose.yml``` file and paste in the docker compose configuration.
 
 ## NGINX Proxy Manager
 
@@ -114,8 +119,6 @@ Access NGINX Proxy Manager at ```http://{raspberrypi-ip}:81```.
 ## Portainer
 Portainer is a GUI tool for managing Docker containers.
 
-To organize my docker compose files, I create a directory for each service/application and place the corresponding docker compose file in that directory.
-
 ##### Portainer Compose File
 ``` Bash
 services:
@@ -154,7 +157,7 @@ Access Portainer at ```https://{raspberrypi-ip}:9443```.
 
 ## Pi-Hole + Cloudflared
 
-Pi-Hole acts as a [DNS sinkhole](https://en.wikipedia.org/wiki/DNS_sinkhole), blocking ads and telemetry requests. Paired with Cloudflared, it allows DNS over HTTPS (DoH), encrypting DNS queries.
+Pi-Hole acts as a [DNS sinkhole](https://en.wikipedia.org/wiki/DNS_sinkhole), blocking ads and telemetry requests. Paired with Cloudflared it allows [DNS over HTTPS (DoH)](https://en.wikipedia.org/wiki/DNS_over_HTTPS) encrypting DNS queries.
 
 ``` Bash
 services:
@@ -215,7 +218,7 @@ pihole -a -p <password>
 For the finale configuration, go into settings in pihole and change the upstream DNS to the docker container IP addresses of cloudflared (172.30.1.1 & 172.30.8.8). Now that should be it for the raspberry pi, change your DNS server (typically your router) to point to the raspberry pi and boom.... you are done.
 
 ## Bitwarden/Vaultwarden
-Bitwarden is a password manager and vaultwarden is a more lightweight option that you can host yourself. This works with the bitwarden app and extension. 
+Bitwarden is a password manager and vaultwarden is a more lightweight option that you can host yourself. This works with the bitwarden app and extension.
 
 ``` Bash
 services:
@@ -245,7 +248,7 @@ networks:
     external: true                             
 ```
 
-Once the container is up you should be able to reach bitwarden through ```http://{raspberrypi-ip}:8080```, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest. 
+Once the container is up you should be able to reach bitwarden through ```http://{raspberrypi-ip}:8080```, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest, I use NGINX Proxy Manager for this.
 
 ## Wireguard VPN
 I also have a VPN on my Pi to be able to reach my DNS and my LAN in general from outside my network. There are different options out there but I choose wireguard and found it simple to configure.
