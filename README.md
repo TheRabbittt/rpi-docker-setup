@@ -631,10 +631,10 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                 #change this
+      - TZ=Europe/Stockholm                                 #Change
     volumes:
       - radarr_config:/config
-      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
+      - /xxx/xxx/data:/data                                 #Change
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -648,10 +648,10 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                 #change this
+      - TZ=Europe/Stockholm                                 #Change
     volumes:
       - sonarr_config:/config
-      - /mnt/BigBoi/data:/data                              #change this, in this example I have mounted my NAS share to my raspberry pi.
+      - /xxx/xxx/data:/data                                 #Change
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -659,18 +659,24 @@ services:
       arr:
         ipv4_address: 172.100.0.3
     
-  qbittorrent:                                             #Run through gluetun
+  qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     environment:
-      - PUID=1026                  
+      - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                 #change this
+      - TZ=Europe/Stockholm                                 #Change
       - WEBUI_PORT=8081
       - TORRENTING_PORT=6881
     volumes:
       - qbittorrent_config:/config
-      - /mnt/BigBoi/data/Downloads:/data/Downloads          #change this, in this example I have mounted my NAS share to my raspberry pi.
+      - /xx/xx/data/Downloads:/data/Downloads               #Change
+    healthcheck:
+      test: ping -c 2 8.8.8.8 || kill 1
+      interval: 300s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     network_mode: "container:gluetun"
     
@@ -680,7 +686,7 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                #change this
+      - TZ=Europe/Stockholm                                 #Change
     volumes:
       - overseerr_config:/config
     ports:
@@ -690,30 +696,61 @@ services:
       arr:
         ipv4_address: 172.100.0.4
 
-  prowlarr:                                              #Run through gluetun
+  prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                #change this
+      - TZ=Europe/Stockholm
     volumes:
       - prowlarr_config:/config
+    healthcheck:
+      test: ping -c 2 8.8.8.8 || kill 1
+      interval: 300s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     network_mode: "container:gluetun"
+      
 
-  flaresolverr:                                            #Run through gluetun
+  flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_HTML=${LOG_HTML:-false}
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-      - TZ=Europe/Stockholm                                #change this
+      - TZ=Europe/Stockholm                                 #Change
     volumes:
       - flaresolverr_config:/config
+    healthcheck:
+      test: ping -c 2 8.8.8.8 || kill 1
+      interval: 300s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     network_mode: "container:gluetun"
+
+  maintainerr:
+    image: ghcr.io/maintainerr/maintainerr:latest
+    container_name: maintainerr
+    volumes:
+      - type: bind
+        source: ./data
+        target: /opt/data
+    environment:
+      - TZ=Europe/Stockholm                                 #Change
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - 6246:6246
+    restart: unless-stopped
+    networks:
+      arr:
+        ipv4_address: 172.100.0.5
 
 networks:
   arr:
