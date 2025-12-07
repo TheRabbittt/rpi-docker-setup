@@ -31,6 +31,7 @@ Here’s a list of all services included in this Raspberry Pi setup, along with 
 | ↳ **[Prowlarr](#arr-stack)** | Indexer manager and proxy for *arr apps. | [Repository ↗︎](https://github.com/Prowlarr/Prowlarr) |
 | ↳ **[Flaresolverr](#arr-stack)** | Handles Cloudflare protection for indexers that require JavaScript solving. | [Repository ↗︎](https://github.com/FlareSolverr/FlareSolverr) |
 | ↳ **[qBittorrent](#arr-stack)** | Torrent client used for downloading media, typically routed through Gluetun VPN. | [Repository ↗︎](https://github.com/linuxserver/docker-qbittorrent) |
+| ↳ **[Maintainerr](#arr-stack)** | Janitor for your stack. | [Repository ↗︎](https://github.com/Maintainerr/Maintainerr) |
 
 
 ## Prerequisites
@@ -265,11 +266,11 @@ services:
       - PGID=1000
       - TZ=Europe/Stockholm                                    # Change this
       - SERVERURL=auto #optional                               # Set to automatically find server's external IP   
-      - SERVERPORT=51820 #optional
-      - PEERS=3 #optional                                      # Change this to the number of clients needed
-      - PEERDNS=172.20.0.4  #optional                          # Pi-Hole docker IP Address (most likely a 172.... address)
-      - INTERNAL_SUBNET=10.13.13.0 #optional
-      - ALLOWEDIPS=0.0.0.0/0 #optional
+      - SERVERPORT=51820                                       #optional
+      - PEERS=3                                                # Change this to the number of clients needed
+      - PEERDNS=172.20.0.4                                     # Pi-Hole docker IP Address
+      - INTERNAL_SUBNET=10.13.13.0
+      - ALLOWEDIPS=0.0.0.0/0
     volumes:
       - /home/pi/wireguard/config:/config
       - /lib/modules:/lib/modules
@@ -591,13 +592,13 @@ services:
     volumes:
       - ./data:/gluetun
     environment:
-      - TZ=Europe/Stockholm
-      - VPN_SERVICE_PROVIDER=change me
-      - VPN_TYPE=change me
-      - OPENVPN_USER=change me
-      - OPENVPN_PASSWORD=change me
-      - SERVER_REGIONS=change me
-      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24 #Needed to make  stack reachable. First part is container IPs second it LAN not sure which one is needed but one of them is :P
+      - TZ=Europe/Stockholm                                             #change me
+      - VPN_SERVICE_PROVIDER=                                           #change me
+      - VPN_TYPE==                                                      #change me
+      - OPENVPN_USER==                                                  #change me
+      - OPENVPN_PASSWORD==                                              #change me
+      - SERVER_REGIONS==                                                #change me
+      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24         #needed to make arr stack reachable. First part is container IPs second is LAN not sure which one is needed but one of them is :P
     ports:
       - 8081:8081     #For qbittorrent
       - 6881:6881     #For qbittorrent
@@ -624,7 +625,7 @@ networks:
 
 For my arr stack I run everything within the same docker compose configuration file. Seems logical since they are mostly dependent on eachother. The initial setup of all of these is pretty simple but if you have trouble or things you would like to optimize I would recommend using this guide [Trash Guide](https://trash-guides.info/).
 
-My docker compose stack is a little unique. I have mounted my NAS drive to my raspberry pi. You will have to change volumes specifically /mnt/BigBoi/x:/data part.
+My docker compose stack is a little unique. I have mounted my NAS drive to my raspberry pi. You will have to change volumes to match your external/mounted drive.
 
 ``` Bash
 services:
@@ -716,7 +717,6 @@ services:
       start_period: 60s
     restart: unless-stopped
     network_mode: "container:gluetun"
-      
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -729,7 +729,7 @@ services:
     volumes:
       - flaresolverr_config:/config
     healthcheck:
-      test: ping -c 2 8.8.8.8 || kill 1
+      test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
       interval: 300s
       timeout: 10s
       retries: 3
@@ -817,7 +817,7 @@ Requires=cpu_temp.sh
 [Service]
 Type=simple
 ExecStart=/home/admin/pi-alert/cpu_temp.sh
-User=admin #change this to your user
+User=admin                                  #change this to your user
 ```
 
 pialert.timer
@@ -829,7 +829,7 @@ Description="Timer for the pialert.service"
 [Timer]
 Unit=pialert.service
 OnBootSec=5min
-OnUnitActiveSec=10min #how often it should run
+OnUnitActiveSec=10min                       #how often it should run
 
 [Install]
 WantedBy=timers.target
