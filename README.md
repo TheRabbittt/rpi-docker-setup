@@ -209,14 +209,31 @@ networks:
   proxy:
     external: true
 ```
-After running the docker compose yml you should be able to reach pihole through ```http://{raspberrypi_ip}:8061/admin```. Login password should be "changeme" although you should change the password which you can do by going into the docker container.
+After running the docker compose yml you should be able to reach pihole through ```http://{raspberrypi_ip}:8061/admin```. Login password should be "changeme" although you should change the password which you can do by going into the docker container. 
 
 ``` Bash
 docker exec -it <container_id> bash
 pihole -a -p <password>
 ```
 
-For the finale configuration, go into settings in pihole and change the upstream DNS to the docker container IP addresses of cloudflared (172.30.1.1 & 172.30.8.8). Now that should be it for the raspberry pi, change your DNS server (typically your router) to point to the raspberry pi and boom.... you are done.
+For the final configuration, go into the Pi-hole settings and change the upstream DNS servers to the Docker container IPs of Cloudflared (e.g., 172.30.1.1 and 172.30.8.8). That’s all you need to do on the Raspberry Pi. After that, update your network’s DNS server (usually set in your router) to point to the Raspberry Pi. At this point, your network should be using Pi-hole as its DNS resolver.
+
+### Pihole Reverse Proxy Configuration
+The goal of a reverse proxy is to reach your services using domain names instead of IP addresses. In my homelab I use the .lan domain. The IETF reserved home.arpa for LAN use, but honestly the name is ridiculous, so I don’t bother with it. Avoid using .local, though—Apple devices rely on it for mDNS, which will cause conflicts and prevent you from reaching those services from these devices.
+
+To integrate Pi-hole with a reverse proxy, you need Pi-hole to point your service domains/subdomains to your reverse proxy. You can do this in two ways:
+
+1. Add each services+subdomain to pihole each time you create a service/application. For example ```pihole.lan → 192.168.1.10``` under local DNS records in the pihole webUI (not recommended).
+   
+2. Settings → All Settings → Miscellaneous and enable ```misc.etc_dnsmasq_d``` and also add these two lines to ```misc.dnsmasq_lines```. First line in the config below prevents pihole from trying to resolve .lan with an upstream DNS server, second line points any subdomain to 192.168.1.10 which would be the proxy in my case.
+   
+```
+server=/lan/#
+address=/.lan/192.168.1.10
+```
+
+
+<img width="1240" height="458" alt="Screenshot 2025-12-08 213259" src="https://github.com/user-attachments/assets/1c5b7ee5-7463-40b5-8999-ad570d00868a" />
 
 ## Bitwarden/Vaultwarden
 Bitwarden is a password manager and vaultwarden is a more lightweight option that you can host yourself. This works with the bitwarden app and extension.
@@ -303,9 +320,6 @@ To add more clients in the future edit the peers variable in the docker-compose 
 
 ## Watchtower
 Automatically monitors and updates your running Docker containers to keep them up to date with the latest images.
-``` Bash
-docker logs watchtower
-```
 
 ``` Bash
 services:
