@@ -649,10 +649,10 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                 #Change
+      - TZ=Europe/Stockholm
     volumes:
       - radarr_config:/config
-      - /xxx/xxx/data:/data                                 #Change
+      - /mnt/BigBoi/data:/data
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -666,10 +666,10 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                 #Change
+      - TZ=Europe/Stockholm
     volumes:
       - sonarr_config:/config
-      - /xxx/xxx/data:/data                                 #Change
+      - /mnt/BigBoi/data:/data
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -683,19 +683,19 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                 #Change
+      - TZ=Europe/Stockholm
       - WEBUI_PORT=8081
       - TORRENTING_PORT=6881
     volumes:
       - qbittorrent_config:/config
-      - /xx/xx/data/Downloads:/data/Downloads               #Change
+      - /mnt/BigBoi/data/Downloads:/data/Downloads
     healthcheck:
-      test: ping -c 2 8.8.8.8 || kill 1
-      interval: 300s
-      timeout: 10s
-      retries: 3
+      test: ping -c 2 8.8.8.8 || exit 1
+      interval: 60s
+      timeout: 5s
+      retries: 2
       start_period: 60s
-    restart: unless-stopped
+    restart: on-failure
     network_mode: "container:gluetun"
     
   overseerr:
@@ -704,7 +704,7 @@ services:
     environment:
       - PUID=1026
       - PGID=1000
-      - TZ=Europe/Stockholm                                 #Change
+      - TZ=Europe/Stockholm
     volumes:
       - overseerr_config:/config
     ports:
@@ -724,14 +724,14 @@ services:
     volumes:
       - prowlarr_config:/config
     healthcheck:
-      test: ping -c 2 8.8.8.8 || kill 1
-      interval: 300s
-      timeout: 10s
-      retries: 3
+      test: ping -c 2 8.8.8.8 || exit 1
+      interval: 60s
+      timeout: 50s
+      retries: 2
       start_period: 60s
-    restart: unless-stopped
+    restart: on-failure
     network_mode: "container:gluetun"
-
+      
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
@@ -739,16 +739,16 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_HTML=${LOG_HTML:-false}
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-      - TZ=Europe/Stockholm                                 #Change
+      - TZ=Europe/Stockholm
     volumes:
       - flaresolverr_config:/config
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
-      interval: 300s
-      timeout: 10s
-      retries: 3
+      test: ping -c 2 8.8.8.8 || exit 1
+      interval: 60s
+      timeout: 5s
+      retries: 2
       start_period: 60s
-    restart: unless-stopped
+    restart: on-failure
     network_mode: "container:gluetun"
 
   maintainerr:
@@ -759,7 +759,7 @@ services:
         source: ./data
         target: /opt/data
     environment:
-      - TZ=Europe/Stockholm                                 #Change
+      - TZ=Europe/Stockholm
       - PUID=1000
       - PGID=1000
     ports:
