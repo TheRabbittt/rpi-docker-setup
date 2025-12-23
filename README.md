@@ -9,7 +9,7 @@ This repository documents my raspberry pi server setup, covering configuration s
 
 ## 🧩 Services Overview
 
-Here’s a list of all services included in this Raspberry Pi setup, along with short descriptions and repository links for reference.
+List of all services included in this Raspberry Pi setup, along with short descriptions and repository links for reference.
 
 | Service | Description | Repository |
 |----------|--------------|-------------|
@@ -35,13 +35,12 @@ Here’s a list of all services included in this Raspberry Pi setup, along with 
 
 
 ## Prerequisites
-* Adequate storage for your needs. (Example: I used a 128GB microSD card with 20% used for all my services.)
-* A Raspberry Pi with an installed and updated OS. (I used [Raspberry Pi OS](https://www.raspberrypi.com/software/) 64-bit, based on Debian, but any OS should work as long as you know the commands for it.)
+* Enough storage for your needs (Example: I used a 128GB microSD card with 20% used for all my services).
+* Raspberry Pi with an installed and updated OS (I used [Raspberry Pi OS](https://www.raspberrypi.com/software/) 64-bit, based on Debian, but any OS should work as long as you know the commands for it).
 * Static IP: Recommended for consistent access.
 
 
 ## Installing Docker
-
 To get started, install ```docker``` and ```docker-compose```.
 
 Docker is a tool that simplifies application deployment in lightweight containers. Containers share the same OS resources, so they’re more efficient than virtual machines.
@@ -66,21 +65,21 @@ sudo docker run hello-world
 ```
 Install docker compose:
 ``` Bash
-sudo apt-get install docker-compose-plugin
+sudo apt install docker-compose-plugin
 ```
 Verify that Docker Compose is installed:
 ``` Bash
 docker compose version
 ```
-To use docker compose I would recommend creating a directory for each container you will create. For example I have my setup similar to down below for each exisiting container/container stack on my setup.
+To use docker compose I would recommend creating a directory for each container you will create. For example I have my setup similar to down below for each container/stack on my setup.
 
-```/home/user/docker/nginx-proxy-manager``` 
+```docker/nginx-proxy-manager```
 
-Within this folder I create the ```docker-compose.yml``` file and paste in the docker compose configuration.
+Within each respective container folder you create the ```docker-compose.yml``` file and paste in the docker compose configuration.
 
 ## NGINX Proxy Manager
 
-NGINX Proxy Manager lets you manage domains and control which application each domain points to. For example, you can create a domain name for Pi-hole (e.g., pihole.website.io) instead of using its IP address. This setup won’t be public; only devices within your LAN will be able to access these services.
+NGINX Proxy Manager let’s you manage domains and control which application each domain points to. For example, you can create a domain name for Pi-hole (e.g., pihole.website.io) instead of using its IP address. This setup won’t be public; only devices within your LAN will be able to access these services.
 
    Tutorial: Credit to "Wolfgang's Channel" on youtube for this [video](https://www.youtube.com/watch?v=qlcVx-k-02E) guide (I used deSEC for DNS, which is free.)
 
@@ -97,7 +96,7 @@ services:
       - ./config.json:/app/config/production.json
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
-    restart: always
+    restart: unless-stopped
     networks:
       proxy:
         ipv4_address: 172.20.0.2
@@ -110,12 +109,11 @@ networks:
         - subnet: 172.20.0.0/16
 ```
 
-
-Run NGINX Proxy Manager with the following Docker Compose configuration:
+Below is how you run all the docker compose configuration files:
 ``` Bash
 docker compose up -d
 ```
-Access NGINX Proxy Manager at ```http://{raspberrypi-ip}:81```.
+Access NGINX Proxy Manager at ```http://<raspberrypi-ip>:81```
 
 ## Portainer
 Portainer is a GUI tool for managing Docker containers.
@@ -137,10 +135,7 @@ services:
       proxy:
         ipv4_address: 172.20.0.3
     restart: unless-stopped
-  
-volumes:
-  data:
-  
+
 networks:
   portainer:
     name: portainer
@@ -150,29 +145,30 @@ networks:
   proxy:
      external: true
 ```
-Run Portainer with:
-``` Bash
-docker compose up -d
-```
-Access Portainer at ```https://{raspberrypi-ip}:9443```.
+
+Access Portainer at ```https://<raspberrypi-ip>:9443```
 
 ## Pi-Hole + Cloudflared
 
 Pi-Hole acts as a [DNS sinkhole](https://en.wikipedia.org/wiki/DNS_sinkhole), blocking ads and telemetry requests. Paired with Cloudflared it allows [DNS over HTTPS (DoH)](https://en.wikipedia.org/wiki/DNS_over_HTTPS) encrypting DNS queries.
+
+To hide password within compose files you can use [secrets](https://docs.docker.com/compose/how-tos/use-secrets/). It is used within all composes below to hide sensitive information, to do the same you would need to create a file within the docker/pihole directory with this filestructure ```/secrets/pihole_password.txt```
 
 ``` Bash
 services:
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
+    secrets:                                          #Define which secret to use
+      - pihole_password
     ports:
       - "53:53/tcp"
       - "53:53/udp"
       - "8061:80/tcp"
       - "4443:443/tcp"
     environment:
-      TZ: 'Europe/Stockholm'                  #change this
-      WEBPASSWORD: password                   #change this
+      TZ: 'Europe/Stockholm'
+      WEBPASSWORD_FILE: /run/secrets/pihole_password   #Where to place the secret within the container
     volumes:
        - './data/etc:/etc/pihole/'
     restart: unless-stopped
@@ -208,18 +204,17 @@ networks:
         - subnet: 172.50.0.0/16
   proxy:
     external: true
+
+secrets:
+  pihole_password:
+    file: ./secrets/pihole_password.txt                #Path towards secret.txt
 ```
-After running the docker compose yml you should be able to reach pihole through ```http://{raspberrypi_ip}:8061/admin```. Login password should be "changeme" although you should change the password which you can do by going into the docker container. 
+After running the docker compose yml you should be able to reach pihole through ```http://<raspberrypi_ip>:8061/admin```.
 
-``` Bash
-docker exec -it <container_id> bash
-pihole -a -p <password>
-```
+For the final configuration, go into the Pi-hole settings and change the upstream DNS servers to the Docker container IPs of Cloudflared (e.g., 172.30.1.1 and 172.30.8.8). That’s all you need to do on the Raspberry Pi. After that, update your network’s DNS server (usually set in your router) to point to the Raspberry Pi. At this point, your network should be using Pi-hole as it’s DNS resolver.
 
-For the final configuration, go into the Pi-hole settings and change the upstream DNS servers to the Docker container IPs of Cloudflared (e.g., 172.30.1.1 and 172.30.8.8). That’s all you need to do on the Raspberry Pi. After that, update your network’s DNS server (usually set in your router) to point to the Raspberry Pi. At this point, your network should be using Pi-hole as its DNS resolver.
-
-### Pihole Reverse Proxy Configuration
-The goal of a reverse proxy is to reach your services using domain names instead of IP addresses. In my homelab I use the .lan domain. The IETF reserved home.arpa for LAN use, but honestly the name is ridiculous, so I don’t bother with it. Avoid using .local, though—Apple devices rely on it for mDNS, which will cause conflicts and prevent you from reaching those services from these devices.
+### Pi-hole Reverse Proxy Configuration
+The goal of a reverse proxy is to reach your services using domain names instead of IP addresses. In my homelab I use the .lan domain. The IETF reserved home.arpa for LAN use, but honestly the name is ridiculous, so I don’t bother with it. I would recommend against using .local because Apple devices rely on it for mDNS, which will cause conflicts and prevent you from reaching those services from these devices.
 
 To integrate Pi-hole with a reverse proxy, you need Pi-hole to point your service domains/subdomains to your reverse proxy. You can do this in two ways:
 
@@ -243,13 +238,13 @@ services:
   vaultwarden:
     image: vaultwarden/server:latest
     container_name: vaultwarden
-    restart: unless-stopped
     environment:
       - WEBSOCKET_ENABLED=true
     volumes:
       - ./data:/data
     ports:
       - 8080:80
+    restart: unless-stopped
     networks:
       bitwarden:
         ipv4_address: 172.70.0.2
@@ -266,10 +261,11 @@ networks:
     external: true                             
 ```
 
-Once the container is up you should be able to reach bitwarden through ```http://{raspberrypi-ip}:8080```, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest, I use NGINX Proxy Manager for this.
+Once the container Is up you should be able to reach bitwarden through ```http://<raspberrypi-ip>:8080```, although you won't be able to create an account or use it just yet. Bitwarden needs to go through HTTPS otherwise errors will occur. There are multiple ways of doing this, one way is through a reverse proxy which I found to be the easiest, I use NGINX Proxy Manager for this.
 
 ## Wireguard VPN
-I also have a VPN on my Pi to be able to reach my DNS and my LAN in general from outside my network. There are different options out there but I choose wireguard and found it simple to configure.
+VPN to reach my DNS and my LAN from outside my network. There are different options out there but I choose wireguard and found it simple to configure.
+
 ``` Bash
 services:
   wireguard:
@@ -281,18 +277,18 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/Stockholm                                    # Change this
-      - SERVERURL=auto #optional                               # Set to automatically find server's external IP   
-      - SERVERPORT=51820                                       #optional
-      - PEERS=3                                                # Change this to the number of clients needed
-      - PEERDNS=172.20.0.4                                     # Pi-Hole docker IP Address
+      - TZ=Europe/Stockholm
+      - SERVERURL=auto 
+      - SERVERPORT=51820
+      - PEERS=3                                #Amount of available peers
+      - PEERDNS=172.20.0.4                     #IP of pihole container
       - INTERNAL_SUBNET=10.13.13.0
-      - ALLOWEDIPS=0.0.0.0/0
+      - ALLOWEDIPS=0.0.0.0/0                   #Allows all IPs to connect to VPN
     volumes:
       - /home/pi/wireguard/config:/config
       - /lib/modules:/lib/modules
     ports:
-      - 51820:51820/udp                                        # Forward port 51820/udp on your router to the server IP
+      - 51820:51820/udp
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv4.ip_forward=1
@@ -328,9 +324,9 @@ services:
     container_name: watchtower
     environment:
       TZ: Europe/Stockholm
-      WATCHTOWER_ROLLING_RESTART: 'true'
+      #WATCHTOWER_ROLLING_RESTART: 'true'
       #WATCHTOWER_MONITOR_ONLY: 'true'
-      WATCHTOWER_SCHEDULE: '0 0 0 * * 0'          #Runs Once A Week (Cron Epression)
+      WATCHTOWER_SCHEDULE: '0 0 0 * * 0'           #Cron expression (Set at 12:00 AM, only on Sunday)
       WATCHTOWER_CLEANUP: 'true'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -381,17 +377,19 @@ networks:
 
 ## Obsidian-LiveSync
 
-Obsidian is a note-taking app that uses plain-text Markdown files stored locally. Obsidian LiveSync is a self-hosted synchronization plugin you can run on a Raspberry Pi, enabling real-time, end-to-end encrypted syncing of your notes across multiple devices without relying on third-party cloud services.
+Obsidian is a note-taking app. Obsidian LiveSync is a self-hosted synchronization plugin you can run on a Raspberry Pi, enabling real-time, end-to-end encrypted syncing of your notes across multiple devices without relying on third-party cloud services.
 
 ```Bash
 services:
    couchdb-obsidian-livesync:
     container_name: obsidian-livesync
     image: couchdb:latest
+    secrets:
+      - couchdb_password
     environment:
-      - TZ=Europe/Stockholm         #change this
-      - COUCHDB_USER=admin          #change this
-      - COUCHDB_PASSWORD=password   #change this
+      - TZ=Europe/Stockholm
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD_FILE=/run/secrets/couchdb_password
     volumes:
       - ./data:/opt/couchdb/data
       - ./etc:/opt/couchdb/etc/local.d
@@ -408,6 +406,9 @@ networks:
     ipam:
       config:
         - subnet: 172.60.0.0/16
+secrets:
+  couchdb_password:
+   file: ./secrets/couchdb_password.txt
 ```
 
 Next you will have to setup the database, I would recommend following this [Guide](https://www.reddit.com/r/selfhosted/comments/1eo7knj/guide_obsidian_with_free_selfhosted_instant_sync/)
@@ -596,9 +597,10 @@ A secure VPN client container that routes traffic from other containers (like to
 services:
   gluetun:
     image: qmcgaw/gluetun:latest
+    secrets:
+      - vpn_user
+      - vpn_password
     container_name: gluetun
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"
     cap_add:
       - NET_ADMIN
     devices:
@@ -606,19 +608,19 @@ services:
     volumes:
       - ./data:/gluetun
     environment:
-      - TZ=Europe/Stockholm                                             #change me
-      - VPN_SERVICE_PROVIDER=                                           #change me
-      - VPN_TYPE==                                                      #change me
-      - OPENVPN_USER==                                                  #change me
-      - OPENVPN_PASSWORD==                                              #change me
-      - SERVER_REGIONS==                                                #change me
-      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24         #needed to make arr stack reachable. First part is container IPs second is LAN not sure which one is needed but one of them is :P
+      - TZ=Europe/Stockholm
+      - VPN_SERVICE_PROVIDER=                                     #VPN Provider, check Gluetun documentation
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER_FILE=/run/secrets/vpn_user
+      - OPENVPN_PASSWORD_FILE=/run/secrets/vpn_password
+      - SERVER_REGIONS=                                           #Which region/country you want VPN to connect
+      - FIREWALL_OUTBOUND_SUBNETS=172.100.0.0/24,192.168.1.0/24   #Needed to allow one of these for *arr stack to work, either container LAN or actual LAN.
     ports:
-      - 8081:8081     #For qbittorrent
-      - 6881:6881     #For qbittorrent
+      - 8081:8081                                                 #For qbittorrent
+      - 6881:6881                                                 #For qbittorrent
       - 6881:6881/udp
-      - 9696:9696     #For Prowl
-      - 8191:8191     #For Flaresolverr
+      - 9696:9696                                                 #For Prowlarr
+      - 8191:8191                                                 #For Flaresolverr
     restart: unless-stopped
     networks:
       gluetun:
@@ -631,6 +633,11 @@ networks:
     ipam:
       config:
         - subnet: 172.90.0.0/16
+secrets:
+  vpn_user:
+    file: ./secrets/vpn_user.txt
+  vpn_password:
+    file: ./secrets/vpn_password.txt
 ```
 
 ## arr stack
@@ -652,7 +659,7 @@ services:
       - TZ=Europe/Stockholm
     volumes:
       - radarr_config:/config
-      - /mnt/BigBoi/data:/data
+      - /mnt/BigBoi/data:/data                       #Change
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -669,7 +676,7 @@ services:
       - TZ=Europe/Stockholm
     volumes:
       - sonarr_config:/config
-      - /mnt/BigBoi/data:/data
+      - /mnt/BigBoi/data:/data                       #Change
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -688,7 +695,7 @@ services:
       - TORRENTING_PORT=6881
     volumes:
       - qbittorrent_config:/config
-      - /mnt/BigBoi/data/Downloads:/data/Downloads
+      - /mnt/BigBoi/data/Downloads:/data/Downloads   #Change
     healthcheck:
       test: ping -c 2 8.8.8.8 || exit 1
       interval: 60s
@@ -733,7 +740,7 @@ services:
     network_mode: "container:gluetun"
       
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
+    image: nightrabbitdev/flaresolverr-with-ping:latest
     container_name: flaresolverr
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -788,7 +795,7 @@ volumes:
 
 ## Receive Discord Alerts for Raspberry Pi Overheating
 
-First create a new server in Discord where you will get your alerts. Find the webhook link for that server and keep the link somewhere for now.
+First create a new server in Discord where you will get your alerts.
 
 On the raspberry pi create a file, you can call it anything, I named it cpu_temp.sh. Paste what's below into it and place the discord webhook link at the correct variable in the script:
 
@@ -809,7 +816,7 @@ pi_temp=$(echo $pi_temp | awk -F "[.]" '{print($1)}')
 # get the hostname, so we know which Pi is sending the alert
 this_pi=$(hostname)
 
-discord_pi_webhook="Discord Webhook Link"
+discord_pi_webhook=
 
 if [[ "$pi_temp" -ge 50 ]]; then
   curl -H "Content-Type: application/json" -X POST -d '{"content":"'"ALERT! ${this_pi} CPU temp is: ${pi_temp}"'"}' $discord_pi_webhook
