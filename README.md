@@ -642,11 +642,42 @@ secrets:
 
 ## arr stack
 
-*arr family is a collection of media automation tools that manage downloading, organizing, and tracking movies and TV shows through indexers and torrent clients.
+The *arr family is a collection of media automation tools that manage downloading, organizing, and tracking movies and TV shows through indexers and torrent clients.
 
 For my arr stack I run everything within the same docker compose configuration file. Seems logical since they are mostly dependent on eachother. The initial setup of all of these is pretty simple but if you have trouble or things you would like to optimize I would recommend using this guide [Trash Guide](https://trash-guides.info/).
 
-My docker compose stack is a little unique. I have mounted my NAS drive to my raspberry pi. You will have to change volumes to match your external/mounted drive.
+#### Docker Compose & Storage Layout
+My Docker Compose stack is slightly unique because I mount my NAS directly to my Raspberry Pi. If you’re following this setup, you’ll need to adjust the volume paths to match your own external or mounted storage.
+
+One important concept to understand is [hardlinks](https://en.wikipedia.org/wiki/Hard_link). 
+
+#### Hardlinks & File Structure
+
+In short hardlinks allow a single file to appear in multiple locations without consuming additional disk space.
+
+For example your torrent client downloads a movie to data/torrents/radarr, radarr then “moves” the file to data/media. Instead of copying the file (which would double storage usage), radarr creates a hardlink. The operation is instant and both paths point to the same data blocks on disk.
+
+#### File Structure
+
+The main importance when making your own file structure is that all containers reference the same root path which is data in this case. This is required for hardlinking to function.
+
+```
+data
+├── Downloads
+│  ├── radarr
+│  ├── tv-sonarr
+├── Temporary TV Shows & Anime
+└── Temporary Movies
+```
+#### Verify Hardlinking
+
+You can verify hardlinking by checking linkcount
+
+```ls -l```
+
+If you want more confirmation you can compare the inode number when writing below command on both locations of the file, same inode number = hardlinked.
+
+```stat filename.mkv```
 
 ``` Bash
 services:
@@ -654,12 +685,13 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     environment:
-      - PUID=1026
+      - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Europe/Stockholm
     volumes:
       - radarr_config:/config
-      - /mnt/BigBoi/data:/data                       #Change
+      - /mnt/BigBoi/data:/data
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -671,12 +703,13 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     environment:
-      - PUID=1026
+      - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Europe/Stockholm
     volumes:
       - sonarr_config:/config
-      - /mnt/BigBoi/data:/data                       #Change
+      - /mnt/BigBoi/data:/data
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -688,14 +721,15 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     environment:
-      - PUID=1026
+      - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Europe/Stockholm
       - WEBUI_PORT=8081
       - TORRENTING_PORT=6881
     volumes:
       - qbittorrent_config:/config
-      - /mnt/BigBoi/data/Downloads:/data/Downloads   #Change
+      - /mnt/BigBoi/data/Downloads:/data/Downloads
     healthcheck:
       test: ping -c 2 8.8.8.8 || exit 1
       interval: 60s
@@ -709,8 +743,9 @@ services:
     image: lscr.io/linuxserver/overseerr:latest
     container_name: overseerr
     environment:
-      - PUID=1026
+      - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Europe/Stockholm
     volumes:
       - overseerr_config:/config
@@ -725,8 +760,9 @@ services:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
-      - PUID=1026
+      - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Europe/Stockholm
     volumes:
       - prowlarr_config:/config
@@ -766,9 +802,10 @@ services:
         source: ./data
         target: /opt/data
     environment:
-      - TZ=Europe/Stockholm
       - PUID=1000
       - PGID=1000
+      - UMASK=022
+      - TZ=Europe/Stockholm
     ports:
       - 6246:6246
     restart: unless-stopped
