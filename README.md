@@ -620,7 +620,7 @@ services:
       - 6881:6881                                                 #For qbittorrent
       - 6881:6881/udp
       - 9696:9696                                                 #For Prowlarr
-      - 8191:8191                                                 #For Flaresolverr
+      - 8191:8191                                                 #For verr
     restart: unless-stopped
     networks:
       gluetun:
@@ -776,7 +776,7 @@ services:
     network_mode: "container:gluetun"
       
   flaresolverr:
-    image: nightrabbitdev/flaresolverr-with-ping:latest
+    image: flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -786,7 +786,7 @@ services:
     volumes:
       - flaresolverr_config:/config
     healthcheck:
-      test: ping -c 2 8.8.8.8 || exit 1
+      test: ["CMD-SHELL", "curl -s --head --fail http://www.google.com || exit 1"]
       interval: 60s
       timeout: 5s
       retries: 2
