@@ -836,27 +836,47 @@ First create a new server in Discord where you will get your alerts.
 
 On the raspberry pi create a file, you can call it anything, I named it cpu_temp.sh. Paste what's below into it and place the discord webhook link at the correct variable in the script:
 
-NOTE: Credit to Dave McKay for the script and tutorial on how to do it [LINK](https://www.howtogeek.com/discord-slack-alert-raspberry-pi-too-hot/)
+NOTE: Credit to Dave McKay for the initial script and tutorial on how to do it [LINK](https://www.howtogeek.com/discord-slack-alert-raspberry-pi-too-hot/)
 
 ``` Bash
 #!/bin/bash
 
-# get CPU temperature in Celsius
-pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2)}')
+BASE_TEMP=50
+STEP=5
+STATE_FILE="/tmp/pi_temp_alert.state"
 
-# for Fahrenheit temperatures, use this line instead
-# pi_temp=$(vcgencmd measure_temp | awk -F "[=']" '{print($2 * 1.8)+32}')
-
-# round down to an integer value
-pi_temp=$(echo $pi_temp | awk -F "[.]" '{print($1)}')
-
-# get the hostname, so we know which Pi is sending the alert
+# get CPU temperature in Celsius (rounded down)
+pi_temp=$(vcgencmd measure_temp | awk -F "[=.'']" '{print int($2)}')
 this_pi=$(hostname)
 
-discord_pi_webhook=
+discord_pi_webhook=""
 
-if [[ "$pi_temp" -ge 50 ]]; then
-  curl -H "Content-Type: application/json" -X POST -d '{"content":"'"ALERT! ${this_pi} CPU temp is: ${pi_temp}"'"}' $discord_pi_webhook
+# If below base temp → reset state
+if [[ "$pi_temp" -lt "$BASE_TEMP" ]]; then
+  rm -f "$STATE_FILE"
+  exit 0
+fi
+
+# First alert at or above BASE_TEMP
+if [[ ! -f "$STATE_FILE" ]]; then
+  echo "$pi_temp" > "$STATE_FILE"
+
+  curl -H "Content-Type: application/json" -X POST \
+    -d "{\"content\":\" ALERT! ${this_pi} CPU temp reached ${pi_temp}°C\"}" \
+    "$discord_pi_webhook"
+  exit 0
+fi
+
+last_alert_temp=$(cat "$STATE_FILE")
+temp_diff=$((pi_temp - last_alert_temp))
+
+# Alert only if temp increased by STEP
+if [[ "$temp_diff" -ge "$STEP" ]]; then
+  echo "$pi_temp" > "$STATE_FILE"
+
+  curl -H "Content-Type: application/json" -X POST \
+    -d "{\"content\":\"⚠️ UPDATE! ${this_pi} CPU temp increased to ${pi_temp}°C\"}" \
+    "$discord_pi_webhook"
 fi
 ```
 
