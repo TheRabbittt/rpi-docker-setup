@@ -32,6 +32,9 @@ List of all services included in this Raspberry Pi setup, along with short descr
 | ↳ **[Flaresolverr](#arr-stack)** | Handles Cloudflare protection for indexers that require JavaScript solving. | [Repository ↗︎](https://github.com/FlareSolverr/FlareSolverr) |
 | ↳ **[qBittorrent](#arr-stack)** | Torrent client used for downloading media, typically routed through Gluetun VPN. | [Repository ↗︎](https://github.com/linuxserver/docker-qbittorrent) |
 | ↳ **[Maintainerr](#arr-stack)** | Janitor for your stack. | [Repository ↗︎](https://github.com/Maintainerr/Maintainerr) |
+| **[Pi Temperature Alert](#receive-discord-alerts-for-raspberry-pi-overheating)** | Receive Discord Temperature Alert. | — |
+
+
 
 
 ## Prerequisites
